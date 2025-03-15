@@ -1,3 +1,13 @@
-# ungry
+# Ungry
 
-[Edit in StackBlitz next generation editor ⚡️](https://stackblitz.com/~/github.com/zizekuros/ungry)
+This is a simple shopping list app built with [Bolt.new](https://bolt.new), a no-code AI tool for creating apps. It allows users to create and share shopping lists with friends.
+
+## Why?
+I’m just experimenting with Bolt.new and testing out its capabilities. The goal is to create an alternative to **Hungry**, which is shutting down on **March 31**.
+
+## Features
+- Create a shopping list
+- Share it with friends
+- Keep track of items together
+
+This is just a fun test project, but feel free to try it out! 🚀
