@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { PlusCircle, Share2, Trash2, ShoppingBasket, ArrowLeft, Check } from 'lucide-react';
+import { PlusCircle, Share2, Trash2, ShoppingCart, ArrowLeft, Check, Copy } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 
 // Initialize Supabase client
@@ -12,97 +12,284 @@ const supabase = createClient(
 function App() {
   const [lists, setLists] = useState<any[]>([]);
   const [currentList, setCurrentList] = useState<any>(null);
+  const [listItems, setListItems] = useState<any[]>([]);
   const [newItem, setNewItem] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'date'>('date');
   const [accessKey, setAccessKey] = useState('');
+  const [user, setUser] = useState<any>(null);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load lists from local storage
-    const savedLists = localStorage.getItem('ungry_lists');
-    if (savedLists) {
-      setLists(JSON.parse(savedLists));
-    }
+    // Check if user is authenticated
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const createNewList = () => {
-    const newList = {
-      id: Date.now(),
-      name: `Shopping List ${lists.length + 1}`,
-      items: [],
-      boughtItems: [],
-      accessKey: Math.random().toString(36).substring(2, 8).toUpperCase(),
-      owner: true,
-      created: new Date().toISOString()
-    };
-    
-    setLists([...lists, newList]);
-    setCurrentList(newList);
-    localStorage.setItem('ungry_lists', JSON.stringify([...lists, newList]));
-    toast.success('New list created!');
-  };
+  useEffect(() => {
+    if (user) {
+      // Check URL for list ID
+      const listId = new URLSearchParams(window.location.search).get('list');
+      if (listId) {
+        loadListById(listId);
+      } else {
+        loadLists();
+      }
+    }
+  }, [user]);
 
-  const addItem = (item: string) => {
-    if (!item.trim() || !currentList) return;
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-    const newItems = [...currentList.items, {
-      id: Date.now(),
-      name: item.trim(),
-      added: new Date().toISOString()
-    }];
-
-    const updatedList = { ...currentList, items: newItems };
-    const updatedLists = lists.map(l => 
-      l.id === currentList.id ? updatedList : l
-    );
-
-    setLists(updatedLists);
-    setCurrentList(updatedList);
-    setNewItem('');
-    localStorage.setItem('ungry_lists', JSON.stringify(updatedLists));
-
-    // Add to suggestions if not exists
-    const savedSuggestions = JSON.parse(localStorage.getItem('ungry_suggestions') || '[]');
-    if (!savedSuggestions.includes(item.trim())) {
-      const newSuggestions = [...savedSuggestions, item.trim()];
-      localStorage.setItem('ungry_suggestions', JSON.stringify(newSuggestions));
+    try {
+      if (authMode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (error) throw error;
+        toast.success('Check your email for the confirmation link!');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        toast.success('Signed in successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const loadLists = async () => {
+    if (!user) return;
+
+    const { data: listsData, error: listsError } = await supabase
+      .from('shopping_lists')
+      .select('*');
+    
+    if (listsError) {
+      toast.error('Failed to load lists');
+      return;
+    }
+
+    // Load items count for each list
+    const listsWithItems = await Promise.all((listsData || []).map(async (list) => {
+      const { data: items } = await supabase
+        .from('list_items')
+        .select('*')
+        .eq('list_id', list.id);
+      
+      return {
+        ...list,
+        itemsCount: items?.filter(i => !i.bought).length || 0,
+        boughtItemsCount: items?.filter(i => i.bought).length || 0
+      };
+    }));
+
+    setLists(listsWithItems);
+  };
+
+  const loadListById = async (id: string) => {
+    if (!user) return;
+
+    const { data: list, error: listError } = await supabase
+      .from('shopping_lists')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (listError) {
+      toast.error('Failed to load list');
+      return;
+    }
+
+    if (list) {
+      const { data: items } = await supabase
+        .from('list_items')
+        .select('*')
+        .eq('list_id', id);
+
+      setCurrentList(list);
+      setListItems(items || []);
+      // Update URL
+      window.history.pushState({}, '', `?list=${list.id}`);
+    }
+  };
+
+  const createNewList = async () => {
+    if (!user) {
+      toast.error('Please sign in to create a list');
+      return;
+    }
+
+    const accessKey = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    const { data, error } = await supabase
+      .from('shopping_lists')
+      .insert([{
+        name: `Shopping List ${lists.length + 1}`,
+        access_key: accessKey,
+        owner_id: user.id
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      toast.error('Failed to create list');
+      return;
+    }
+
+    if (data) {
+      setLists([...lists, { ...data, itemsCount: 0, boughtItemsCount: 0 }]);
+      setCurrentList(data);
+      setListItems([]);
+      window.history.pushState({}, '', `?list=${data.id}`);
+      toast.success('New list created!');
+    }
+  };
+
+  const addItem = async (item: string) => {
+    if (!item.trim() || !currentList || !user) return;
+
+    const { data: itemData, error: itemError } = await supabase
+      .from('list_items')
+      .insert([{
+        list_id: currentList.id,
+        name: item.trim()
+      }])
+      .select()
+      .single();
+
+    if (itemError) {
+      toast.error('Failed to add item');
+      return;
+    }
+
+    // Update suggestions
+    await supabase
+      .from('item_suggestions')
+      .upsert([{
+        name: item.trim(),
+        usage_count: 1
+      }]);
+
+    setNewItem('');
+    setListItems([...listItems, itemData]);
+  };
+
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNewItem(value);
     
     if (value.trim()) {
-      const savedSuggestions = JSON.parse(localStorage.getItem('ungry_suggestions') || '[]');
-      const filtered = savedSuggestions.filter((s: string) => 
-        s.toLowerCase().includes(value.toLowerCase())
-      );
-      setSuggestions(filtered);
+      const { data } = await supabase
+        .from('item_suggestions')
+        .select('name')
+        .ilike('name', `%${value}%`)
+        .order('usage_count', { ascending: false })
+        .limit(5);
+
+      setSuggestions(data?.map(s => s.name) || []);
       setShowSuggestions(true);
     } else {
       setShowSuggestions(false);
     }
   };
 
-  const joinList = () => {
+  const joinList = async () => {
+    if (!user) {
+      toast.error('Please sign in to join a list');
+      return;
+    }
+
     if (!accessKey.trim()) {
       toast.error('Please enter an access key');
       return;
     }
 
-    // In a real app, this would verify with the backend
+    const { data, error } = await supabase
+      .from('shopping_lists')
+      .select('*')
+      .eq('access_key', accessKey.trim())
+      .single();
+
+    if (error || !data) {
+      toast.error('Invalid access key');
+      return;
+    }
+
+    // Add user as a list member
+    const { error: memberError } = await supabase
+      .from('list_members')
+      .insert([{
+        list_id: data.id,
+        member_id: user.id
+      }]);
+
+    if (memberError) {
+      toast.error('Failed to join list');
+      return;
+    }
+
+    setCurrentList(data);
+    const { data: items } = await supabase
+      .from('list_items')
+      .select('*')
+      .eq('list_id', data.id);
+    
+    setListItems(items || []);
+    window.history.pushState({}, '', `?list=${data.id}`);
     toast.success('Joined list successfully!');
     setAccessKey('');
   };
 
-  const deleteList = (listId: number) => {
+  const deleteList = async (listId: string) => {
+    if (!user) return;
+
+    if (!window.confirm('Are you sure you want to delete this list?')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('shopping_lists')
+      .delete()
+      .eq('id', listId)
+      .eq('owner_id', user.id);
+
+    if (error) {
+      toast.error('Failed to delete list');
+      return;
+    }
+
     const updatedLists = lists.filter(l => l.id !== listId);
     setLists(updatedLists);
     setCurrentList(null);
-    localStorage.setItem('ungry_lists', JSON.stringify(updatedLists));
+    setListItems([]);
+    window.history.pushState({}, '', '/');
     toast.success('List deleted!');
+  };
+
+  const copyInviteLink = (list: any) => {
+    const url = `${window.location.origin}?list=${list.id}`;
+    navigator.clipboard.writeText(url);
+    toast.success('Invite link copied to clipboard!');
   };
 
   const sortItems = (items: any[]) => {
@@ -110,59 +297,112 @@ function App() {
       if (sortBy === 'name') {
         return a.name.localeCompare(b.name);
       }
-      return new Date(b.added).getTime() - new Date(a.added).getTime();
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
   };
 
-  const markItemAsBought = (item: any) => {
-    const updatedList = { 
-      ...currentList,
-      items: currentList.items.filter((i: any) => i.id !== item.id),
-      boughtItems: [...(currentList.boughtItems || []), { ...item, boughtAt: new Date().toISOString() }]
-    };
-    
-    const updatedLists = lists.map(l => 
-      l.id === currentList.id ? updatedList : l
-    );
+  const markItemAsBought = async (item: any) => {
+    if (!user) return;
 
-    setLists(updatedLists);
-    setCurrentList(updatedList);
-    localStorage.setItem('ungry_lists', JSON.stringify(updatedLists));
+    const { error } = await supabase
+      .from('list_items')
+      .update({ bought: true })
+      .eq('id', item.id);
+
+    if (error) {
+      toast.error('Failed to update item');
+      return;
+    }
+
+    setListItems(listItems.map(i => 
+      i.id === item.id ? { ...i, bought: true } : i
+    ));
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+        <div className="bg-yellow-50 p-8 rounded-lg shadow-md w-full max-w-md">
+          <h1 className="text-2xl font-bold text-amber-900 mb-4 text-center">Welcome to ungry</h1>
+          <form onSubmit={handleAuth} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-amber-700">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-amber-700">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-amber-400 text-yellow-50 px-6 py-2 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Loading...' : authMode === 'signin' ? 'Sign In' : 'Sign Up'}
+            </button>
+          </form>
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+              className="text-amber-600 hover:text-amber-700 text-sm"
+            >
+              {authMode === 'signin' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-amber-50">
       <Toaster position="top-center" />
       
       {/* Header */}
-      <header className="bg-amber-400 text-amber-900 p-4 shadow-lg">
+      <header className="bg-amber-400 text-yellow-50 p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                <path d="M4 7V5C4 4.44772 4.44772 4 5 4H19C19.5523 4 20 4.44772 20 5V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M8 11V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M16 11V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M12 11V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M4 7H20V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19V7Z" stroke="currentColor" strokeWidth="2"/>
-              </svg>
+              <ShoppingCart className="w-full h-full" />
             </div>
             {currentList ? (
               <button
-                onClick={() => setCurrentList(null)}
+                onClick={() => {
+                  setCurrentList(null);
+                  setListItems([]);
+                  window.history.pushState({}, '', '/');
+                }}
                 className="flex items-center gap-2 hover:bg-amber-300 p-2 rounded-lg transition-colors"
               >
                 <ArrowLeft size={24} />
                 <span className="hidden sm:inline">Back to Lists</span>
               </button>
             ) : (
-              <h1 className="text-2xl font-bold">Ungry</h1>
+              <h1 className="text-2xl font-bold">ungry</h1>
             )}
           </div>
           {!currentList && (
             <button
               onClick={createNewList}
-              className="bg-white text-amber-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
+              className="bg-yellow-50 text-amber-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
             >
               <PlusCircle size={20} />
               New List
@@ -175,7 +415,7 @@ function App() {
       <main className="max-w-4xl mx-auto p-4">
         {/* Join List Section */}
         {!currentList && (
-          <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+          <div className="bg-yellow-50 p-4 rounded-lg shadow-md mb-4">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -186,7 +426,7 @@ function App() {
               />
               <button
                 onClick={joinList}
-                className="bg-amber-400 text-amber-900 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-300 transition-colors"
+                className="bg-amber-400 text-yellow-50 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-300 transition-colors"
               >
                 <Share2 size={20} />
                 Join
@@ -197,7 +437,7 @@ function App() {
 
         {/* Current List */}
         {currentList && (
-          <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="bg-yellow-50 rounded-lg shadow-md p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-amber-900">{currentList.name}</h2>
               <div className="flex items-center gap-4">
@@ -209,7 +449,7 @@ function App() {
                   <option value="date">Sort by Date</option>
                   <option value="name">Sort by Name</option>
                 </select>
-                {currentList.owner && (
+                {currentList.owner_id === user.id && (
                   <button
                     onClick={() => deleteList(currentList.id)}
                     className="text-red-600 hover:text-red-700"
@@ -231,7 +471,7 @@ function App() {
                 onKeyPress={(e) => e.key === 'Enter' && addItem(newItem)}
               />
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 bg-white border rounded-lg mt-1 shadow-lg z-10">
+                <div className="absolute top-full left-0 right-0 bg-yellow-50 border rounded-lg mt-1 shadow-lg z-10">
                   {suggestions.map((suggestion, index) => (
                     <div
                       key={index}
@@ -252,7 +492,7 @@ function App() {
             <div>
               <h3 className="font-medium text-amber-900 mb-2">To Buy</h3>
               <div className="space-y-2 mb-6">
-                {sortItems(currentList.items).map((item: any) => (
+                {sortItems(listItems.filter(item => !item.bought)).map((item) => (
                   <button
                     key={item.id}
                     onClick={() => markItemAsBought(item)}
@@ -261,7 +501,7 @@ function App() {
                     <span>{item.name}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-500">
-                        {new Date(item.added).toLocaleDateString()}
+                        {new Date(item.created_at).toLocaleDateString()}
                       </span>
                       <span className="opacity-0 group-hover:opacity-100 text-green-600 p-1 rounded-full transition-all">
                         <Check size={18} />
@@ -272,18 +512,18 @@ function App() {
               </div>
 
               {/* Bought Items */}
-              {currentList.boughtItems?.length > 0 && (
+              {listItems.some(item => item.bought) && (
                 <>
                   <h3 className="font-medium text-amber-900 mb-2">Bought Items</h3>
                   <div className="space-y-2 opacity-75">
-                    {sortItems(currentList.boughtItems).map((item: any) => (
+                    {sortItems(listItems.filter(item => item.bought)).map((item) => (
                       <div
                         key={item.id}
                         className="flex items-center justify-between p-2 rounded-lg"
                       >
                         <span className="line-through">{item.name}</span>
                         <span className="text-sm text-gray-500">
-                          {new Date(item.boughtAt).toLocaleDateString()}
+                          {new Date(item.created_at).toLocaleDateString()}
                         </span>
                       </div>
                     ))}
@@ -300,19 +540,36 @@ function App() {
             {lists.map(list => (
               <div
                 key={list.id}
-                className="bg-white p-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setCurrentList(list)}
+                className="bg-yellow-50 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-amber-900">{list.name}</h3>
-                  <span className="text-sm text-gray-500">
-                    {new Date(list.created).toLocaleDateString()}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyInviteLink(list);
+                      }}
+                      className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                      title="Copy invite link"
+                    >
+                      <Copy size={18} />
+                    </button>
+                    <span className="text-sm text-gray-500">
+                      {new Date(list.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-600">
-                  <p>{list.items.length} items to buy</p>
-                  {list.boughtItems?.length > 0 && (
-                    <p>{list.boughtItems.length} items bought</p>
+                <div 
+                  className="text-sm text-gray-600 cursor-pointer"
+                  onClick={() => {
+                    setCurrentList(list);
+                    window.history.pushState({}, '', `?list=${list.id}`);
+                  }}
+                >
+                  <p>{list.itemsCount} items to buy</p>
+                  {list.boughtItemsCount > 0 && (
+                    <p>{list.boughtItemsCount} items bought</p>
                   )}
                 </div>
               </div>
