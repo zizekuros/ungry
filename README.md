@@ -12,4 +12,12 @@ I’m just experimenting with Bolt.new and testing out its capabilities. The goa
 - Keep track of items together
 - Markign bought items
 
+## Environment variables
+App is interacting with Supabase database to store and manage users, shopping lists, items, etc. 
+You should provide the following env variables to the application:
+```
+VITE_SUPABASE_ANON_KEY= # ANON KEY
+VITE_SUPABASE_URL= # URL
+```
+
 This is just a fun test project, but feel free to try it out! 🚀
