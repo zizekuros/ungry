@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { PlusCircle, Share2, Trash2, ShoppingCart, ArrowLeft, Check, Copy } from 'lucide-react';
+import { PlusCircle, Share2, Trash2, ShoppingCart, ArrowLeft, Check, Copy, Eye, EyeOff, Trash } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 
 // Initialize Supabase client
@@ -23,6 +23,8 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [showAccessKey, setShowAccessKey] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -139,12 +141,17 @@ function App() {
       return;
     }
 
+    if (!newListName.trim()) {
+      toast.error('Please enter a list name');
+      return;
+    }
+
     const accessKey = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     const { data, error } = await supabase
       .from('shopping_lists')
       .insert([{
-        name: `Shopping List ${lists.length + 1}`,
+        name: newListName.trim(),
         access_key: accessKey,
         owner_id: user.id
       }])
@@ -157,11 +164,12 @@ function App() {
     }
 
     if (data) {
-      setLists([...lists, { ...data, itemsCount: 0, boughtItemsCount: 0 }]);
+      await loadLists();
       setCurrentList(data);
       setListItems([]);
       window.history.pushState({}, '', `?list=${data.id}`);
       toast.success('New list created!');
+      setNewListName('');
     }
   };
 
@@ -185,13 +193,17 @@ function App() {
     // Update suggestions
     await supabase
       .from('item_suggestions')
-      .upsert([{
+      .upsert({
         name: item.trim(),
-        usage_count: 1
-      }]);
+        usage_count: 1,
+        last_used: new Date().toISOString()
+      }, {
+        onConflict: 'name'
+      });
 
     setNewItem('');
     setListItems([...listItems, itemData]);
+    setShowSuggestions(false);
   };
 
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,10 +256,15 @@ function App() {
       }]);
 
     if (memberError) {
-      toast.error('Failed to join list');
+      if (memberError.code === '23505') { // Unique violation
+        toast.error('You are already a member of this list');
+      } else {
+        toast.error('Failed to join list');
+      }
       return;
     }
 
+    await loadLists();
     setCurrentList(data);
     const { data: items } = await supabase
       .from('list_items')
@@ -278,18 +295,16 @@ function App() {
       return;
     }
 
-    const updatedLists = lists.filter(l => l.id !== listId);
-    setLists(updatedLists);
+    await loadLists();
     setCurrentList(null);
     setListItems([]);
     window.history.pushState({}, '', '/');
     toast.success('List deleted!');
   };
 
-  const copyInviteLink = (list: any) => {
-    const url = `${window.location.origin}?list=${list.id}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Invite link copied to clipboard!');
+  const copyAccessKey = (list: any) => {
+    navigator.clipboard.writeText(list.access_key);
+    toast.success('Access key copied to clipboard!');
   };
 
   const sortItems = (items: any[]) => {
@@ -317,6 +332,39 @@ function App() {
     setListItems(listItems.map(i => 
       i.id === item.id ? { ...i, bought: true } : i
     ));
+  };
+
+  const clearBoughtItems = async () => {
+    if (!user || !currentList) return;
+
+    if (!window.confirm('Are you sure you want to clear all bought items?')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('list_items')
+      .delete()
+      .eq('list_id', currentList.id)
+      .eq('bought', true);
+
+    if (error) {
+      toast.error('Failed to clear bought items');
+      return;
+    }
+
+    setListItems(listItems.filter(item => !item.bought));
+    toast.success('Bought items cleared!');
+  };
+
+  const navigateToList = async (list: any) => {
+    setCurrentList(list);
+    const { data: items } = await supabase
+      .from('list_items')
+      .select('*')
+      .eq('list_id', list.id);
+    
+    setListItems(items || []);
+    window.history.pushState({}, '', `?list=${list.id}`);
   };
 
   if (!user) {
@@ -378,8 +426,8 @@ function App() {
       
       {/* Header */}
       <header className="bg-amber-400 text-yellow-50 p-4 shadow-lg">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="w-8 h-8">
               <ShoppingCart className="w-full h-full" />
             </div>
@@ -389,6 +437,7 @@ function App() {
                   setCurrentList(null);
                   setListItems([]);
                   window.history.pushState({}, '', '/');
+                  loadLists();
                 }}
                 className="flex items-center gap-2 hover:bg-amber-300 p-2 rounded-lg transition-colors"
               >
@@ -400,13 +449,22 @@ function App() {
             )}
           </div>
           {!currentList && (
-            <button
-              onClick={createNewList}
-              className="bg-yellow-50 text-amber-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
-            >
-              <PlusCircle size={20} />
-              New List
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="text"
+                placeholder="New List"
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg text-amber-900"
+              />
+              <button
+                onClick={createNewList}
+                className="bg-yellow-50 text-amber-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors whitespace-nowrap"
+              >
+                <PlusCircle size={20} />
+                <span className="hidden sm:inline">Create</span>
+              </button>
+            </div>
           )}
         </div>
       </header>
@@ -438,9 +496,31 @@ function App() {
         {/* Current List */}
         {currentList && (
           <div className="bg-yellow-50 rounded-lg shadow-md p-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
               <h2 className="text-xl font-semibold text-amber-900">{currentList.name}</h2>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => copyAccessKey(currentList)}
+                    className="p-2 hover:bg-amber-100 rounded-lg transition-colors flex items-center gap-1 whitespace-nowrap"
+                    title="Copy access key"
+                  >
+                    <Copy size={18} />
+                    <span className="text-sm">Copy access key</span>
+                  </button>
+                  <button
+                    onClick={() => setShowAccessKey(!showAccessKey)}
+                    className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                    title={showAccessKey ? "Hide access key" : "Show access key"}
+                  >
+                    {showAccessKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  {showAccessKey && (
+                    <span className="text-sm font-mono bg-amber-100 px-2 py-1 rounded">
+                      {currentList.access_key}
+                    </span>
+                  )}
+                </div>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'name' | 'date')}
@@ -469,7 +549,13 @@ function App() {
                 value={newItem}
                 onChange={handleInputChange}
                 onKeyPress={(e) => e.key === 'Enter' && addItem(newItem)}
+                list="item-suggestions"
               />
+              <datalist id="item-suggestions">
+                {suggestions.map((suggestion, index) => (
+                  <option key={index} value={suggestion} />
+                ))}
+              </datalist>
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute top-full left-0 right-0 bg-yellow-50 border rounded-lg mt-1 shadow-lg z-10">
                   {suggestions.map((suggestion, index) => (
@@ -514,7 +600,16 @@ function App() {
               {/* Bought Items */}
               {listItems.some(item => item.bought) && (
                 <>
-                  <h3 className="font-medium text-amber-900 mb-2">Bought Items</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-medium text-amber-900">Bought Items</h3>
+                    <button
+                      onClick={clearBoughtItems}
+                      className="text-red-600 hover:text-red-700 flex items-center gap-1 text-sm"
+                    >
+                      <Trash size={16} />
+                      Clear bought items
+                    </button>
+                  </div>
                   <div className="space-y-2 opacity-75">
                     {sortItems(listItems.filter(item => item.bought)).map((item) => (
                       <div
@@ -540,18 +635,19 @@ function App() {
             {lists.map(list => (
               <div
                 key={list.id}
-                className="bg-yellow-50 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                onClick={() => navigateToList(list)}
+                className="bg-yellow-50 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-amber-900">{list.name}</h3>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyInviteLink(list);
+                        copyAccessKey(list);
                       }}
                       className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
-                      title="Copy invite link"
+                      title="Copy access key"
                     >
                       <Copy size={18} />
                     </button>
@@ -560,13 +656,7 @@ function App() {
                     </span>
                   </div>
                 </div>
-                <div 
-                  className="text-sm text-gray-600 cursor-pointer"
-                  onClick={() => {
-                    setCurrentList(list);
-                    window.history.pushState({}, '', `?list=${list.id}`);
-                  }}
-                >
+                <div className="text-sm text-gray-600">
                   <p>{list.itemsCount} items to buy</p>
                   {list.boughtItemsCount > 0 && (
                     <p>{list.boughtItemsCount} items bought</p>

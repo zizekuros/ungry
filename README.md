@@ -3,7 +3,7 @@
 This is a simple shopping list app built with [Bolt.new](https://bolt.new), a no-code AI tool for creating apps. It allows users to create and share shopping lists with friends.
 
 ## Why?
-I’m just experimenting with Bolt.new and testing out its capabilities. The goal is to create an alternative to **Hungry**, which is shutting down on **March 31**.
+I'm just experimenting with Bolt.new and testing out its capabilities. The goal is to create an alternative to **Hungry**, which is shutting down on **March 31**.
 
 ## Features
 - User registration
@@ -21,3 +21,20 @@ VITE_SUPABASE_URL= # URL
 ```
 
 This is just a fun test project, but feel free to try it out! 🚀
+
+## Build app
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file in the root directory and add your Supabase credentials
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+5. Build for production:
+   ```bash
+   npm run build
+   ```
