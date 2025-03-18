@@ -10,7 +10,7 @@ I'm just experimenting with Bolt.new and testing out its capabilities. The goal 
 - Create a shopping list
 - Share it with friends
 - Keep track of items together
-- Markign bought items
+- Marking bought items
 
 ## Environment variables
 App is interacting with Supabase database to store and manage users, shopping lists, items, etc. 
