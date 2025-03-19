@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { PlusCircle, Share2, Trash2, ShoppingCart, ArrowLeft, Check, Copy, Eye, EyeOff, Trash } from 'lucide-react';
+import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 
 // Initialize Supabase client
@@ -296,9 +296,11 @@ function App() {
     }
 
     await loadLists();
-    setCurrentList(null);
-    setListItems([]);
-    window.history.pushState({}, '', '/');
+    if (currentList?.id === listId) {
+      setCurrentList(null);
+      setListItems([]);
+      window.history.pushState({}, '', '/');
+    }
     toast.success('List deleted!');
   };
 
@@ -427,35 +429,38 @@ function App() {
       {/* Header */}
       <header className="bg-amber-400 text-yellow-50 p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2">
             <div className="w-8 h-8">
               <ShoppingCart className="w-full h-full" />
             </div>
             {currentList ? (
-              <button
-                onClick={() => {
-                  setCurrentList(null);
-                  setListItems([]);
-                  window.history.pushState({}, '', '/');
-                  loadLists();
-                }}
-                className="flex items-center gap-2 hover:bg-amber-300 p-2 rounded-lg transition-colors"
-              >
-                <ArrowLeft size={24} />
-                <span className="hidden sm:inline">Back to Lists</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setCurrentList(null);
+                    setListItems([]);
+                    window.history.pushState({}, '', '/');
+                    loadLists();
+                  }}
+                  className="flex items-center gap-2 hover:bg-amber-300 p-2 rounded-lg transition-colors"
+                >
+                  <ArrowLeft size={24} />
+                  <span className="hidden sm:inline">Back to Lists</span>
+                </button>
+                <h1 className="text-2xl font-bold">ungry</h1>
+              </div>
             ) : (
               <h1 className="text-2xl font-bold">ungry</h1>
             )}
           </div>
           {!currentList && (
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2">
               <input
                 type="text"
                 placeholder="New List"
                 value={newListName}
                 onChange={(e) => setNewListName(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg text-amber-900"
+                className="px-3 py-2 rounded-lg text-amber-900"
               />
               <button
                 onClick={createNewList}
@@ -477,7 +482,7 @@ function App() {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Enter access key to join a list"
+                placeholder="Join list with access key"
                 className="flex-1 border rounded-lg px-4 py-2"
                 value={accessKey}
                 onChange={(e) => setAccessKey(e.target.value)}
@@ -498,29 +503,19 @@ function App() {
           <div className="bg-yellow-50 rounded-lg shadow-md p-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
               <h2 className="text-xl font-semibold text-amber-900">{currentList.name}</h2>
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => copyAccessKey(currentList)}
-                    className="p-2 hover:bg-amber-100 rounded-lg transition-colors flex items-center gap-1 whitespace-nowrap"
-                    title="Copy access key"
-                  >
-                    <Copy size={18} />
-                    <span className="text-sm">Copy access key</span>
-                  </button>
-                  <button
-                    onClick={() => setShowAccessKey(!showAccessKey)}
-                    className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
-                    title={showAccessKey ? "Hide access key" : "Show access key"}
-                  >
-                    {showAccessKey ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                  {showAccessKey && (
-                    <span className="text-sm font-mono bg-amber-100 px-2 py-1 rounded">
-                      {currentList.access_key}
-                    </span>
-                  )}
-                </div>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  onClick={() => setShowAccessKey(!showAccessKey)}
+                  className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                  title={showAccessKey ? "Hide access key" : "Show access key"}
+                >
+                  {showAccessKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+                {showAccessKey && (
+                  <span className="text-sm font-mono bg-amber-100 px-2 py-1 rounded">
+                    {currentList.access_key}
+                  </span>
+                )}
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'name' | 'date')}
@@ -529,14 +524,6 @@ function App() {
                   <option value="date">Sort by Date</option>
                   <option value="name">Sort by Name</option>
                 </select>
-                {currentList.owner_id === user.id && (
-                  <button
-                    onClick={() => deleteList(currentList.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                )}
               </div>
             </div>
 
@@ -641,6 +628,18 @@ function App() {
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-amber-900">{list.name}</h3>
                   <div className="flex items-center gap-2">
+                    {list.owner_id === user.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteList(list.id);
+                        }}
+                        className="p-2 hover:bg-amber-100 rounded-lg transition-colors text-red-600 hover:text-red-700"
+                        title="Delete list"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
