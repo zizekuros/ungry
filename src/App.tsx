@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart } from 'lucide-react';
+import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 
 // Initialize Supabase client
@@ -8,6 +8,34 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL ?? '',
   import.meta.env.VITE_SUPABASE_ANON_KEY ?? ''
 );
+
+// Generate random math problem
+const generateMathProblem = () => {
+  const num1 = Math.floor(Math.random() * 10) + 1;
+  const num2 = Math.floor(Math.random() * 10) + 1;
+  const operators = ['+', '-', '*'];
+  const operator = operators[Math.floor(Math.random() * operators.length)];
+  
+  let answer;
+  switch (operator) {
+    case '+':
+      answer = num1 + num2;
+      break;
+    case '-':
+      answer = num1 - num2;
+      break;
+    case '*':
+      answer = num1 * num2;
+      break;
+    default:
+      answer = 0;
+  }
+  
+  return {
+    question: `${num1} ${operator} ${num2} = ?`,
+    answer: answer.toString()
+  };
+};
 
 function App() {
   const [lists, setLists] = useState<any[]>([]);
@@ -25,6 +53,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [showAccessKey, setShowAccessKey] = useState(false);
+  const [mathProblem, setMathProblem] = useState(generateMathProblem());
+  const [mathAnswer, setMathAnswer] = useState('');
 
   useEffect(() => {
     // Check if user is authenticated
@@ -58,6 +88,14 @@ function App() {
 
     try {
       if (authMode === 'signup') {
+        if (mathAnswer !== mathProblem.answer) {
+          toast.error('Incorrect answer to the math problem');
+          setMathProblem(generateMathProblem());
+          setMathAnswer('');
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -76,6 +114,18 @@ function App() {
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Error signing out');
+    } else {
+      setCurrentList(null);
+      setListItems([]);
+      window.history.pushState({}, '', '/');
+      toast.success('Signed out successfully');
     }
   };
 
@@ -401,9 +451,26 @@ function App() {
                 required
               />
             </div>
+            {authMode === 'signup' && (
+              <div>
+                <label className="block text-sm font-medium text-amber-700">
+                  Solve this problem to prove you're human
+                </label>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="font-mono text-amber-900">{mathProblem.question}</span>
+                  <input
+                    type="text"
+                    value={mathAnswer}
+                    onChange={(e) => setMathAnswer(e.target.value)}
+                    className="block w-24 rounded-md border-gray-300 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
+                    required
+                  />
+                </div>
+              </div>
+            )}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (authMode === 'signup' && !mathAnswer)}
               className="w-full bg-amber-400 text-yellow-50 px-6 py-2 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50"
             >
               {loading ? 'Loading...' : authMode === 'signin' ? 'Sign In' : 'Sign Up'}
@@ -411,7 +478,11 @@ function App() {
           </form>
           <div className="mt-4 text-center">
             <button
-              onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+              onClick={() => {
+                setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+                setMathProblem(generateMathProblem());
+                setMathAnswer('');
+              }}
               className="text-amber-600 hover:text-amber-700 text-sm"
             >
               {authMode === 'signin' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
@@ -433,44 +504,36 @@ function App() {
             <div className="w-8 h-8">
               <ShoppingCart className="w-full h-full" />
             </div>
-            {currentList ? (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setCurrentList(null);
-                    setListItems([]);
-                    window.history.pushState({}, '', '/');
-                    loadLists();
-                  }}
-                  className="flex items-center gap-2 hover:bg-amber-300 p-2 rounded-lg transition-colors"
-                >
-                  <ArrowLeft size={24} />
-                  <span className="hidden sm:inline">Back to Lists</span>
-                </button>
-                <h1 className="text-2xl font-bold">ungry</h1>
-              </div>
-            ) : (
-              <h1 className="text-2xl font-bold">ungry</h1>
-            )}
+            <h1 className="text-2xl font-bold">ungry</h1>
           </div>
-          {!currentList && (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="New List"
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
-                className="px-3 py-2 rounded-lg text-amber-900"
-              />
-              <button
-                onClick={createNewList}
-                className="bg-yellow-50 text-amber-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors whitespace-nowrap"
-              >
-                <PlusCircle size={20} />
-                <span className="hidden sm:inline">Create</span>
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {!currentList && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="New List"
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  className="px-3 py-2 rounded-lg text-amber-900"
+                />
+                <button
+                  onClick={createNewList}
+                  className="bg-yellow-50 text-amber-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors whitespace-nowrap"
+                >
+                  <PlusCircle size={20} />
+                  <span className="hidden sm:inline">Create</span>
+                </button>
+              </div>
+            )}
+            <button
+              onClick={handleLogout}
+              className="bg-yellow-50 text-amber-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
+              title="Sign out"
+            >
+              <LogOut size={20} />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -502,7 +565,21 @@ function App() {
         {currentList && (
           <div className="bg-yellow-50 rounded-lg shadow-md p-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
-              <h2 className="text-xl font-semibold text-amber-900">{currentList.name}</h2>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => {
+                    setCurrentList(null);
+                    setListItems([]);
+                    window.history.pushState({}, '', '/');
+                    loadLists();
+                  }}
+                  className="flex items-center gap-2 hover:bg-amber-300 p-2 rounded-lg transition-colors text-amber-700"
+                >
+                  <ArrowLeft size={24} />
+                  <span>Back to Lists</span>
+                </button>
+                <h2 className="text-xl font-semibold text-amber-900">{currentList.name}</h2>
+              </div>
               <div className="flex items-center gap-2 ml-auto">
                 <button
                   onClick={() => setShowAccessKey(!showAccessKey)}
