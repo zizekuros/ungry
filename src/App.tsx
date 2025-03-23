@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut } from 'lucide-react';
+import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 
 // Initialize Supabase client
@@ -45,6 +45,7 @@ function App() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'date'>('date');
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [accessKey, setAccessKey] = useState('');
   const [user, setUser] = useState<any>(null);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
@@ -223,6 +224,74 @@ function App() {
     }
   };
 
+  const joinList = async () => {
+    if (!user) {
+      toast.error('Please sign in to join a list');
+      return;
+    }
+
+    if (!accessKey.trim()) {
+      toast.error('Please enter an access key');
+      return;
+    }
+
+    // First, find the list by access key
+    const { data: lists, error: listError } = await supabase
+      .from('shopping_lists')
+      .select('*')
+      .eq('access_key', accessKey.trim());
+
+    if (listError || !lists || lists.length === 0) {
+      console.log(listError)
+      toast.error('Invalid access key');
+      return;
+    }
+
+    const list = lists[0];
+
+    // Check if user is already a member
+    const { data: members, error: memberError } = await supabase
+      .from('list_members')
+      .select('*')
+      .eq('list_id', list.id)
+      .eq('member_id', user.id);
+
+    if (memberError) {
+      toast.error('Failed to check membership');
+      return;
+    }
+
+    if (members && members.length > 0) {
+      toast.error('You are already a member of this list');
+      return;
+    }
+
+    // Add user as a list member
+    const { error: insertError } = await supabase
+      .from('list_members')
+      .insert([{
+        list_id: list.id,
+        member_id: user.id
+      }]);
+
+    if (insertError) {
+      toast.error('Failed to join list');
+      return;
+    }
+
+    await loadLists();
+    setCurrentList(list);
+    const { data: items } = await supabase
+      .from('list_items')
+      .select('*')
+      .eq('list_id', list.id);
+    
+    setListItems(items || []);
+    window.history.pushState({}, '', `?list=${list.id}`);
+    toast.success('Joined list successfully!');
+    setAccessKey('');
+  };
+
   const addItem = async (item: string) => {
     if (!item.trim() || !currentList || !user) return;
 
@@ -273,58 +342,6 @@ function App() {
     } else {
       setShowSuggestions(false);
     }
-  };
-
-  const joinList = async () => {
-    if (!user) {
-      toast.error('Please sign in to join a list');
-      return;
-    }
-
-    if (!accessKey.trim()) {
-      toast.error('Please enter an access key');
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('shopping_lists')
-      .select('*')
-      .eq('access_key', accessKey.trim())
-      .single();
-
-    if (error || !data) {
-      toast.error('Invalid access key');
-      return;
-    }
-
-    // Add user as a list member
-    const { error: memberError } = await supabase
-      .from('list_members')
-      .insert([{
-        list_id: data.id,
-        member_id: user.id
-      }]);
-
-    if (memberError) {
-      if (memberError.code === '23505') { // Unique violation
-        toast.error('You are already a member of this list');
-      } else {
-        toast.error('Failed to join list');
-      }
-      return;
-    }
-
-    await loadLists();
-    setCurrentList(data);
-    const { data: items } = await supabase
-      .from('list_items')
-      .select('*')
-      .eq('list_id', data.id);
-    
-    setListItems(items || []);
-    window.history.pushState({}, '', `?list=${data.id}`);
-    toast.success('Joined list successfully!');
-    setAccessKey('');
   };
 
   const deleteList = async (listId: string) => {
@@ -499,16 +516,14 @@ function App() {
       
       {/* Header */}
       <header className="bg-amber-400 text-yellow-50 p-4 shadow-lg">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8">
-              <ShoppingCart className="w-full h-full" />
-            </div>
+            <ShoppingCart className="w-8 h-8" />
             <h1 className="text-2xl font-bold">ungry</h1>
           </div>
           <div className="flex items-center gap-4">
             {!currentList && (
-              <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
                 <input
                   type="text"
                   placeholder="New List"
@@ -527,7 +542,7 @@ function App() {
             )}
             <button
               onClick={handleLogout}
-              className="bg-yellow-50 text-amber-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
+              className="bg-yellow-50 text-amber-600 p-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
               title="Sign out"
             >
               <LogOut size={20} />
@@ -536,6 +551,27 @@ function App() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Create List Button */}
+      {!currentList && (
+        <div className="sm:hidden p-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="New List"
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-lg border"
+            />
+            <button
+              onClick={createNewList}
+              className="bg-amber-400 text-yellow-50 p-2 rounded-lg flex items-center"
+            >
+              <PlusCircle size={20} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-4">
@@ -564,7 +600,7 @@ function App() {
         {/* Current List */}
         {currentList && (
           <div className="bg-yellow-50 rounded-lg shadow-md p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => {
@@ -573,14 +609,13 @@ function App() {
                     window.history.pushState({}, '', '/');
                     loadLists();
                   }}
-                  className="flex items-center gap-2 hover:bg-amber-300 p-2 rounded-lg transition-colors text-amber-700"
+                  className="text-amber-700"
                 >
                   <ArrowLeft size={24} />
-                  <span>Back to Lists</span>
                 </button>
                 <h2 className="text-xl font-semibold text-amber-900">{currentList.name}</h2>
               </div>
-              <div className="flex items-center gap-2 ml-auto">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowAccessKey(!showAccessKey)}
                   className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
@@ -593,14 +628,37 @@ function App() {
                     {currentList.access_key}
                   </span>
                 )}
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'name' | 'date')}
-                  className="border rounded-lg px-3 py-2"
-                >
-                  <option value="date">Sort by Date</option>
-                  <option value="name">Sort by Name</option>
-                </select>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowSortMenu(!showSortMenu)}
+                    className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                    title="Sort items"
+                  >
+                    {sortBy === 'name' ? <ArrowDownAZ size={18} /> : <ArrowDownUp size={18} />}
+                  </button>
+                  {showSortMenu && (
+                    <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg z-20">
+                      <button
+                        onClick={() => {
+                          setSortBy('date');
+                          setShowSortMenu(false);
+                        }}
+                        className="w-full text-left px-4 py-2 hover:bg-amber-50 rounded-t-lg"
+                      >
+                        Sort by Date
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortBy('name');
+                          setShowSortMenu(false);
+                        }}
+                        className="w-full text-left px-4 py-2 hover:bg-amber-50 rounded-b-lg"
+                      >
+                        Sort by Name
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
