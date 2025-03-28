@@ -235,14 +235,13 @@ function App() {
       return;
     }
 
-    // First, find the list by access key
+    // Use a raw query with match_phrase to find the list
     const { data: lists, error: listError } = await supabase
-      .from('shopping_lists')
-      .select('*')
-      .eq('access_key', accessKey.trim());
+      .rpc('find_list_by_access_key', {
+        key: accessKey.trim()
+      });
 
     if (listError || !lists || lists.length === 0) {
-      console.log(listError)
       toast.error('Invalid access key');
       return;
     }
