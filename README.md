@@ -122,4 +122,8 @@ These variables are used to connect to your Supabase project for data storage an
 - Users can only access lists they own or are members of
 - Authentication is handled securely by Supabase
 
+## TO-DO
+- Add RLS policies for list_members to Supabase migration
+- Add feature to leave the list
+
 This is just a fun test project, but feel free to try it out! 🚀
