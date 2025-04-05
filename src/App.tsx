@@ -6,7 +6,12 @@ import { Toaster, toast } from 'react-hot-toast';
 // Initialize Supabase client
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL ?? '',
-  import.meta.env.VITE_SUPABASE_ANON_KEY ?? ''
+  import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
+  {
+    auth: {
+      persistSession: true
+    }
+  }
 );
 
 // Generate random math problem
@@ -409,6 +414,16 @@ function App() {
       return;
     }
 
+    // Get the IDs of bought items
+    const boughtItems = listItems.filter(item => item.bought);
+    const boughtItemIds = boughtItems.map(item => item.id);
+
+    if (boughtItemIds.length === 0) {
+      toast.error('No bought items to clear');
+      return;
+    }
+
+    // Delete bought items from the database
     const { error } = await supabase
       .from('list_items')
       .delete()
@@ -417,9 +432,11 @@ function App() {
 
     if (error) {
       toast.error('Failed to clear bought items');
+      console.error('Delete error:', error);
       return;
     }
 
+    // Update the UI by removing bought items
     setListItems(listItems.filter(item => !item.bought));
     toast.success('Bought items cleared!');
   };

@@ -124,7 +124,6 @@ These variables are used to connect to your Supabase project for data storage an
 
 ## TO-DO
 - Add feature to leave the list
-- Clear bought items does not actually clear items from database
 - Items auto-complete
 
 This is just a fun test project, but feel free to try it out! 🚀
