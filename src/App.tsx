@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp } from 'lucide-react';
+import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 
 // Initialize Supabase client
@@ -147,17 +147,26 @@ function App() {
       return;
     }
 
-    // Load items count for each list
+    // Load items count and membership status for each list
     const listsWithItems = await Promise.all((listsData || []).map(async (list) => {
       const { data: items } = await supabase
         .from('list_items')
         .select('*')
         .eq('list_id', list.id);
       
+      // Check if user is a member of this list
+      const { data: membership } = await supabase
+        .from('list_members')
+        .select('*')
+        .eq('list_id', list.id)
+        .eq('member_id', user.id)
+        .maybeSingle();
+      
       return {
         ...list,
         itemsCount: items?.filter(i => !i.bought).length || 0,
-        boughtItemsCount: items?.filter(i => i.bought).length || 0
+        boughtItemsCount: items?.filter(i => i.bought).length || 0,
+        isMember: !!membership
       };
     }));
 
@@ -375,6 +384,33 @@ function App() {
     toast.success('List deleted!');
   };
 
+  const leaveList = async (listId: string) => {
+    if (!user) return;
+
+    if (!window.confirm('Are you sure you want to leave this list?')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('list_members')
+      .delete()
+      .eq('list_id', listId)
+      .eq('member_id', user.id);
+
+    if (error) {
+      toast.error('Failed to leave list');
+      return;
+    }
+
+    await loadLists();
+    if (currentList?.id === listId) {
+      setCurrentList(null);
+      setListItems([]);
+      window.history.pushState({}, '', '/');
+    }
+    toast.success('Left the list successfully!');
+  };
+
   const copyAccessKey = (list: any) => {
     navigator.clipboard.writeText(list.access_key);
     toast.success('Access key copied to clipboard!');
@@ -389,12 +425,12 @@ function App() {
     });
   };
 
-  const markItemAsBought = async (item: any) => {
+  const toggleItemBought = async (item: any) => {
     if (!user) return;
 
     const { error } = await supabase
       .from('list_items')
-      .update({ bought: true })
+      .update({ bought: !item.bought })
       .eq('id', item.id);
 
     if (error) {
@@ -403,7 +439,7 @@ function App() {
     }
 
     setListItems(listItems.map(i => 
-      i.id === item.id ? { ...i, bought: true } : i
+      i.id === item.id ? { ...i, bought: !i.bought } : i
     ));
   };
 
@@ -414,16 +450,6 @@ function App() {
       return;
     }
 
-    // Get the IDs of bought items
-    const boughtItems = listItems.filter(item => item.bought);
-    const boughtItemIds = boughtItems.map(item => item.id);
-
-    if (boughtItemIds.length === 0) {
-      toast.error('No bought items to clear');
-      return;
-    }
-
-    // Delete bought items from the database
     const { error } = await supabase
       .from('list_items')
       .delete()
@@ -432,11 +458,9 @@ function App() {
 
     if (error) {
       toast.error('Failed to clear bought items');
-      console.error('Delete error:', error);
       return;
     }
 
-    // Update the UI by removing bought items
     setListItems(listItems.filter(item => !item.bought));
     toast.success('Bought items cleared!');
   };
@@ -719,7 +743,7 @@ function App() {
                 {sortItems(listItems.filter(item => !item.bought)).map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => markItemAsBought(item)}
+                    onClick={() => toggleItemBought(item)}
                     className="w-full flex items-center justify-between p-2 hover:bg-amber-50 rounded-lg group text-left transition-colors active:bg-amber-100"
                   >
                     <span>{item.name}</span>
@@ -750,15 +774,16 @@ function App() {
                   </div>
                   <div className="space-y-2 opacity-75">
                     {sortItems(listItems.filter(item => item.bought)).map((item) => (
-                      <div
+                      <button
                         key={item.id}
-                        className="flex items-center justify-between p-2 rounded-lg"
+                        onClick={() => toggleItemBought(item)}
+                        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-amber-50 transition-colors"
                       >
                         <span className="line-through">{item.name}</span>
                         <span className="text-sm text-gray-500">
                           {new Date(item.created_at).toLocaleDateString()}
                         </span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </>
@@ -779,7 +804,7 @@ function App() {
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-amber-900">{list.name}</h3>
                   <div className="flex items-center gap-2">
-                    {list.owner_id === user.id && (
+                    {list.owner_id === user.id ? (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -789,6 +814,17 @@ function App() {
                         title="Delete list"
                       >
                         <Trash2 size={18} />
+                      </button>
+                    ) : list.isMember && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          leaveList(list.id);
+                        }}
+                        className="p-2 hover:bg-amber-100 rounded-lg transition-colors text-amber-600 hover:text-amber-700"
+                        title="Leave list"
+                      >
+                        <LogIn size={18} className="rotate-180" />
                       </button>
                     )}
                     <button

@@ -8,9 +8,9 @@ I'm just experimenting with Bolt.new and testing out its capabilities. The goal 
 ## Features
 - User registration
 - Create a shopping list
-- Share it with friends
+- Share it with friends (joining, leaving a list)
 - Keep track of items together
-- Marking bought items
+- Marking bought or unbought items
 
 ## Tech Stack
 - React + TypeScript
@@ -123,7 +123,6 @@ These variables are used to connect to your Supabase project for data storage an
 - Authentication is handled securely by Supabase
 
 ## TO-DO
-- Add feature to leave the list
 - Items auto-complete
 
 This is just a fun test project, but feel free to try it out! 🚀
