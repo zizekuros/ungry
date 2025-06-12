@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn } from 'lucide-react';
+import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn, Loader2 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 
 // Initialize Supabase client
@@ -57,6 +57,7 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [newListName, setNewListName] = useState('');
   const [showAccessKey, setShowAccessKey] = useState(false);
   const [mathProblem, setMathProblem] = useState(generateMathProblem());
@@ -64,13 +65,23 @@ function App() {
 
   useEffect(() => {
     // Check if user is authenticated
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-    });
+    const initializeAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setInitialLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -476,6 +487,24 @@ function App() {
     window.history.pushState({}, '', `?list=${list.id}`);
   };
 
+  // Show loading spinner while checking authentication
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2 text-amber-600">
+            <ShoppingCart className="w-8 h-8" />
+            <h1 className="text-2xl font-bold">ungry</h1>
+          </div>
+          <div className="flex items-center gap-2 text-amber-700">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-amber-50 flex items-center justify-center">
@@ -528,8 +557,9 @@ function App() {
             <button
               type="submit"
               disabled={loading || (authMode === 'signup' && !mathAnswer)}
-              className="w-full bg-amber-400 text-yellow-50 px-6 py-2 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50"
+              className="w-full bg-amber-400 text-yellow-50 px-6 py-2 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? 'Loading...' : authMode === 'signin' ? 'Sign In' : 'Sign Up'}
             </button>
           </form>
