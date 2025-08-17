@@ -68,6 +68,21 @@ npm run build
 npm run preview
 ```
 
+## SPA Deployment
+
+Ungry is a Single Page Application (SPA) that can be deployed to any static hosting platform. The app is completely client-side with no server dependencies.
+
+### Build for Production
+```bash
+npm run build
+```
+This creates a `dist/` folder with optimized static files ready for deployment.
+
+### Deployment Notes
+- Configure your hosting to redirect all routes to `index.html` for client-side routing
+- Most modern static hosts handle this automatically for SPAs
+- Set your environment variables in your hosting platform's dashboard
+
 ## Database Schema
 - `shopping_lists`: List metadata and access keys
 - `list_items`: Individual items with bought status
