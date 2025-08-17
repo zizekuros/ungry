@@ -83,6 +83,15 @@ This creates a `dist/` folder with optimized static files ready for deployment.
 - Most modern static hosts handle this automatically for SPAs
 - Set your environment variables in your hosting platform's dashboard
 
+### Cloudflare Workers Deployment
+```bash
+# 1. Connect your GitHub repo to Cloudflare Workers
+# 2. Set build command: npm run build
+# 3. Set deploy command: cd cloudflare && npx wrangler deploy
+# 4. Add environment variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+# 5. Deploy automatically on git push
+```
+
 ## Database Schema
 - `shopping_lists`: List metadata and access keys
 - `list_items`: Individual items with bought status
