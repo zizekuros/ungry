@@ -84,13 +84,23 @@ This creates a `dist/` folder with optimized static files ready for deployment.
 - Set your environment variables in your hosting platform's dashboard
 
 ### Cloudflare Workers Deployment
-```bash
-# 1. Connect your GitHub repo to Cloudflare Workers
-# 2. Set build command: npm run build
-# 3. Set deploy command: cd cloudflare && npx wrangler deploy
-# 4. Add environment variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
-# 5. Deploy automatically on git push
-```
+
+1. **Connect Repository**
+   - Go to Cloudflare Workers dashboard
+   - Connect your GitHub repository
+
+2. **Configure Build Settings**
+   - Build command: `npm run build`
+   - Deploy command: `cd cloudflare && npx wrangler deploy`
+   - Root directory: `/` (leave empty)
+
+3. **Set Environment Variables**
+   - Add `VITE_SUPABASE_URL` with your Supabase project URL
+   - Add `VITE_SUPABASE_ANON_KEY` with your Supabase anon key
+
+4. **Deploy**
+   - Push to main branch for automatic deployment
+   - Your app will be available at `https://your-app.your-subdomain.workers.dev`
 
 ## Database Schema
 - `shopping_lists`: List metadata and access keys
