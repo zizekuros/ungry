@@ -1,0 +1,13 @@
+services:
+  ungry-app:
+    build:
+      context: .
+      args:
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    ports:
+      - "3000:80"
+    env_file:
+      - .env
+    restart: unless-stopped
+    container_name: ungry-app
