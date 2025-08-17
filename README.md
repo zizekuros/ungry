@@ -1,16 +1,14 @@
 # Ungry
 
-This is a simple shopping list app built with [Bolt.new](https://bolt.new), a no-code AI tool for creating apps. It allows users to create and share shopping lists with friends.
-
-## Why?
-I'm just experimenting with Bolt.new and testing out its capabilities. The goal is to create an alternative to **[HNGRY](https://iamhngry.com/)**, which was shut down on **31st of March 2025**.
+A collaborative shopping list app that lets you create and share shopping lists with friends. Built as an alternative to the discontinued HNGRY app.
 
 ## Features
-- User registration
-- Create a shopping list
-- Share it with friends (joining, leaving a list)
-- Keep track of items together
-- Marking bought or unbought items
+- User registration and authentication
+- Create and manage shopping lists
+- Share lists with friends using access keys
+- Real-time collaboration on shared lists
+- Mark items as bought/unbought
+- Sort items by name or date
 
 ## Tech Stack
 - React + TypeScript
@@ -18,111 +16,69 @@ I'm just experimenting with Bolt.new and testing out its capabilities. The goal 
 - Tailwind CSS
 - Supabase (Database & Authentication)
 
-## Prerequisites
-- Node.js 18+ installed
-- A Supabase account and project
+## Local Development
 
-## Development Setup
+### Prerequisites
+- Node.js 18+
+- Docker (optional, for containerized setup)
+- Supabase account
 
-1. Clone the repository
+### Setup
+
+1. **Clone the repository**
    ```bash
    git clone <repository-url>
    cd ungry
    ```
 
-2. Install dependencies
+2. **Set up Supabase**
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Run the SQL migrations from `supabase/migrations/` in your project's SQL editor
+   - Get your project URL and anon key from Settings > API
+
+3. **Configure environment**
    ```bash
-   npm install
+   cp .env.example .env
    ```
-
-3. Set up Supabase
-   - Create a new project in Supabase
-   - Run the SQL migrations from `supabase/migrations/` in your Supabase project's SQL editor
-   - Get your project's URL and anon key from the project settings
-
-4. Create environment variables
-   Create a `.env` file in the root directory with the following:
+   Edit `.env` with your Supabase credentials:
    ```
    VITE_SUPABASE_URL=your_supabase_project_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-5. Start the development server
-   ```bash
-   npm run dev
-   ```
+### Running the App
 
-## Database Setup
-The app uses Supabase as its database. The schema includes:
-- `shopping_lists`: Stores shopping lists
-- `list_items`: Stores items in shopping lists
-- `list_members`: Manages list sharing
-- `item_suggestions`: Stores frequently used items for autocomplete
-
-All necessary migrations are in the `supabase/migrations/` directory.
-
-## Deployment
-
-### Local Production Build
-1. Build the project
-   ```bash
-   npm run build
-   ```
-2. Preview the production build
-   ```bash
-   npm run preview
-   ```
-
-### Netlify Deployment
-1. Create a new site in Netlify
-2. Configure build settings:
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-3. Add environment variables:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-
-### Docker Deployment
-1. Create a Dockerfile:
-   ```dockerfile
-   FROM node:18-alpine
-   WORKDIR /app
-   COPY package*.json ./
-   RUN npm install
-   COPY . .
-   RUN npm run build
-   
-   FROM nginx:alpine
-   COPY --from=0 /app/dist /usr/share/nginx/html
-   EXPOSE 80
-   CMD ["nginx", "-g", "daemon off;"]
-   ```
-
-2. Build and run:
-   ```bash
-   docker build -t ungry .
-   docker run -p 80:80 \
-     -e VITE_SUPABASE_URL=your_supabase_url \
-     -e VITE_SUPABASE_ANON_KEY=your_supabase_anon_key \
-     ungry
-   ```
-
-## Environment Variables
-The app requires the following environment variables:
+#### Option 1: Development Server
+```bash
+npm install
+npm run dev
 ```
-VITE_SUPABASE_ANON_KEY= # Supabase project's anon/public key
-VITE_SUPABASE_URL= # Supabase project URL
+App runs at `http://localhost:5173`
+
+#### Option 2: Docker (Recommended)
+```bash
+docker compose up -d --build
+```
+App runs at `http://localhost:3000`
+
+#### Option 3: Production Build
+```bash
+npm install
+npm run build
+npm run preview
 ```
 
-These variables are used to connect to your Supabase project for data storage and user authentication.
+## Database Schema
+- `shopping_lists`: List metadata and access keys
+- `list_items`: Individual items with bought status
+- `list_members`: User permissions for shared lists
+- `item_suggestions`: Autocomplete suggestions
 
-## Security Considerations
-- The app uses Supabase's Row Level Security (RLS) policies
-- Each table has specific access policies
+## Security
+- Row Level Security (RLS) policies ensure data isolation
 - Users can only access lists they own or are members of
-- Authentication is handled securely by Supabase
+- Secure authentication via Supabase
 
-## TO-DO
-- Items auto-complete
+---
 
-This is just a fun test project, but feel free to try it out! 🚀
+*This is a fun experimental project - feel free to try it out! 🚀*
