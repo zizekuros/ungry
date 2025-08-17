@@ -1,7 +1,0 @@
-i added file 20250429173350_gold_cat.sql and included migration code. migration is already done, so ignore it - meaning dont run mograte again.
-
-i want you to fix 1 bug:
-- clear bought items should actually delete items from list (from database) not just from UI
-
-and i want you to add 1 feature:
-- members (excluding owner) have the possibility to leave a shopping list. the icon to be placed at the same position as the owners are having 'delete list' icon positioned
