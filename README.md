@@ -1,5 +1,12 @@
 # Ungry
 
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=Cloudflare&logoColor=white)
+
 A collaborative shopping list app that lets you create and share shopping lists with friends. Built as an alternative to the discontinued HNGRY app.
 
 ## Features
@@ -9,12 +16,6 @@ A collaborative shopping list app that lets you create and share shopping lists 
 - Real-time collaboration on shared lists
 - Mark items as bought/unbought
 - Sort items by name or date
-
-## Tech Stack
-- React + TypeScript
-- Vite
-- Tailwind CSS
-- Supabase (Database & Authentication)
 
 ## Local Development
 
