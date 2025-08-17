@@ -9,6 +9,21 @@
 
 A collaborative shopping list app that lets you create and share shopping lists with friends. Built as an alternative to the discontinued HNGRY app.
 
+## Table of Contents
+
+- [Features](#features)
+- [Repository Structure](#repository-structure)
+- [Local Development](#local-development)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [Running the App](#running-the-app)
+- [SPA Deployment](#spa-deployment)
+  - [Build for Production](#build-for-production)
+  - [Deployment Notes](#deployment-notes)
+  - [Cloudflare Workers Deployment](#cloudflare-workers-deployment)
+- [Database Schema](#database-schema)
+- [Security](#security)
+
 ## Features
 - User registration and authentication
 - Create and manage shopping lists
@@ -16,6 +31,32 @@ A collaborative shopping list app that lets you create and share shopping lists 
 - Real-time collaboration on shared lists
 - Mark items as bought/unbought
 - Sort items by name or date
+
+## Repository Structure
+
+```
+ungry/
+├── .kiro/
+│   └── steering/           # Kiro AI steering rules
+├── cloudflare/
+│   ├── worker.js          # Cloudflare Worker for SPA routing
+│   └── wrangler.toml      # Cloudflare deployment config
+├── src/
+│   ├── App.tsx            # Main React application
+│   ├── main.tsx           # React entry point
+│   └── index.css          # Global styles
+├── supabase/
+│   └── migrations/        # Database schema migrations
+├── dist/                  # Build output (generated)
+├── .env                   # Environment variables (local)
+├── .env.example           # Environment template
+├── docker-compose.yml     # Docker setup for local development
+├── Dockerfile             # Docker container configuration
+├── package.json           # Node.js dependencies and scripts
+├── tailwind.config.js     # Tailwind CSS configuration
+├── vite.config.ts         # Vite build configuration
+└── README.md              # This file
+```
 
 ## Local Development
 
