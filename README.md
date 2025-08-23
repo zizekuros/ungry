@@ -133,8 +133,9 @@ This creates a `dist/` folder with optimized static files ready for deployment.
 
 2. **Configure Build Settings**
    - Build command: `npm run build`
-   - Deploy command: `cd cloudflare && npx wrangler deploy`
-   - Root directory: `/` (leave empty)
+   - Deploy command: `npx wrangler deploy --config cloudflare/wrangler.toml`
+   - Version command: `npx wrangler versions upload`
+   - Root directory: `/`
 
 3. **Set Environment Variables**
    - Add `VITE_SUPABASE_URL` with your Supabase project URL
