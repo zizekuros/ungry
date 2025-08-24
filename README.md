@@ -82,10 +82,15 @@ ungry/
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` with your Supabase credentials:
+   Edit `.env` with your credentials:
    ```
    VITE_SUPABASE_URL=your_supabase_project_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   # Optional: Turnstile CAPTCHA (for bot protection)
+   VITE_TURNSTILE_ENABLED=true
+   VITE_TURNSTILE_SITE_KEY=your_turnstile_site_key
+   TURNSTILE_SECRET_KEY=your_turnstile_secret_key
    ```
 
 ### Running the App
@@ -140,6 +145,9 @@ This creates a `dist/` folder with optimized static files ready for deployment.
 3. **Set Environment Variables**
    - Add `VITE_SUPABASE_URL` with your Supabase project URL
    - Add `VITE_SUPABASE_ANON_KEY` with your Supabase anon key
+   - Add `VITE_TURNSTILE_ENABLED` set to `true` (optional, for bot protection)
+   - Add `VITE_TURNSTILE_SITE_KEY` with your Turnstile site key (optional)
+   - Add `TURNSTILE_SECRET_KEY` with your Turnstile secret key (optional)
 
 4. **Deploy**
    - Push to main branch for automatic deployment
