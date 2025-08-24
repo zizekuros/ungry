@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 
 interface TurnstileWidgetProps {
@@ -15,22 +15,38 @@ const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
     const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
     const enabled = import.meta.env.VITE_TURNSTILE_ENABLED === 'true';
 
-    if (!enabled || !siteKey) {
-        return null;
-    }
+    const handleSuccess = useCallback((token: string) => {
+        onVerify(token);
+    }, [onVerify]);
 
-    return (
-        <div className="flex justify-center">
-            <Turnstile
-                siteKey={siteKey}
-                onSuccess={onVerify}
-                onError={onError}
-                onExpire={onExpire}
-                theme="light"
-                size="normal"
-            />
-        </div>
-    );
+    const handleError = useCallback((error: any) => {
+        onError?.();
+    }, [onError]);
+
+    const handleExpire = useCallback(() => {
+        onExpire?.();
+    }, [onExpire]);
+
+    const widget = useMemo(() => {
+        if (!enabled || !siteKey) {
+            return null;
+        }
+
+
+
+        return (
+            <div className="flex justify-center">
+                <Turnstile
+                    siteKey={siteKey}
+                    onSuccess={handleSuccess}
+                    onError={handleError}
+                    onExpire={handleExpire}
+                />
+            </div>
+        );
+    }, [enabled, siteKey, handleSuccess, handleError, handleExpire]);
+
+    return widget;
 };
 
 export default TurnstileWidget;

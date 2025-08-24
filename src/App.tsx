@@ -1,36 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn, Loader2 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import TurnstileWidget from './components/TurnstileWidget';
 
-// Generate random math problem
-const generateMathProblem = () => {
-  const num1 = Math.floor(Math.random() * 10) + 1;
-  const num2 = Math.floor(Math.random() * 10) + 1;
-  const operators = ['+', '-', '*'];
-  const operator = operators[Math.floor(Math.random() * operators.length)];
-  
-  let answer;
-  switch (operator) {
-    case '+':
-      answer = num1 + num2;
-      break;
-    case '-':
-      answer = num1 - num2;
-      break;
-    case '*':
-      answer = num1 * num2;
-      break;
-    default:
-      answer = 0;
-  }
-  
-  return {
-    question: `${num1} ${operator} ${num2} = ?`,
-    answer: answer.toString()
-  };
-};
+
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -63,8 +37,7 @@ function App() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [newListName, setNewListName] = useState('');
   const [showAccessKey, setShowAccessKey] = useState(false);
-  const [mathProblem, setMathProblem] = useState(generateMathProblem());
-  const [mathAnswer, setMathAnswer] = useState('');
+
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -103,13 +76,29 @@ function App() {
     }
   }, [user]);
 
+  // Turnstile callback handlers
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
+  const handleTurnstileError = useCallback(() => {
+    setTurnstileToken(null);
+    toast.error('Security verification failed. Please try again.');
+  }, []);
+
+  const handleTurnstileExpire = useCallback(() => {
+    setTurnstileToken(null);
+    toast.error('Security verification expired. Please verify again.');
+  }, []);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Check if Turnstile is enabled and token is required
+      // Check if Turnstile is enabled and token is required for both signin and signup
       const turnstileEnabled = import.meta.env.VITE_TURNSTILE_ENABLED === 'true';
+      
       if (turnstileEnabled && !turnstileToken) {
         toast.error('Please complete the security verification');
         setLoading(false);
@@ -117,20 +106,12 @@ function App() {
       }
 
       if (authMode === 'signup') {
-        if (mathAnswer !== mathProblem.answer) {
-          toast.error('Incorrect answer to the math problem');
-          setMathProblem(generateMathProblem());
-          setMathAnswer('');
-          setLoading(false);
-          return;
-        }
-
         const { error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        toast.success('Check your email for the confirmation link!');
+        toast.success('Registration successful!');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -547,42 +528,27 @@ function App() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
                 required
+                minLength={6}
               />
+              {authMode === 'signup' && (
+                <p className="mt-1 text-xs text-amber-600">
+                  Password must be at least 6 characters long
+                </p>
+              )}
             </div>
-            {authMode === 'signup' && (
-              <div>
-                <label className="block text-sm font-medium text-amber-700">
-                  Solve this problem to prove you're human
-                </label>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="font-mono text-amber-900">{mathProblem.question}</span>
-                  <input
-                    type="text"
-                    value={mathAnswer}
-                    onChange={(e) => setMathAnswer(e.target.value)}
-                    className="block w-24 rounded-md border-gray-300 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
-                    required
-                  />
-                </div>
-              </div>
-            )}
+
             
-            {/* Turnstile Widget */}
+            {/* Turnstile Widget - For both signin and signup */}
             <TurnstileWidget
-              onVerify={(token) => setTurnstileToken(token)}
-              onError={() => {
-                setTurnstileToken(null);
-                toast.error('Security verification failed. Please try again.');
-              }}
-              onExpire={() => {
-                setTurnstileToken(null);
-                toast.error('Security verification expired. Please verify again.');
-              }}
+              key={authMode}
+              onVerify={handleTurnstileVerify}
+              onError={handleTurnstileError}
+              onExpire={handleTurnstileExpire}
             />
             
             <button
               type="submit"
-              disabled={loading || (authMode === 'signup' && !mathAnswer)}
+              disabled={loading}
               className="w-full bg-amber-400 text-yellow-50 px-6 py-2 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -593,9 +559,7 @@ function App() {
             <button
               onClick={() => {
                 setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
-                setMathProblem(generateMathProblem());
-                setMathAnswer('');
-                setTurnstileToken(null);
+                setTurnstileToken(null); // Reset token when switching modes
               }}
               className="text-amber-600 hover:text-amber-700 text-sm"
             >
