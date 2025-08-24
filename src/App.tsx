@@ -2,17 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn, Loader2 } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
-
-// Initialize Supabase client
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL ?? '',
-  import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
-  {
-    auth: {
-      persistSession: true
-    }
-  }
-);
+import TurnstileWidget from './components/TurnstileWidget';
 
 // Generate random math problem
 const generateMathProblem = () => {
@@ -42,6 +32,19 @@ const generateMathProblem = () => {
   };
 };
 
+// Initialize Supabase client
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL ?? '',
+  import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
+  {
+    auth: {
+      persistSession: true
+    }
+  }
+);
+
+
+
 function App() {
   const [lists, setLists] = useState<any[]>([]);
   const [currentList, setCurrentList] = useState<any>(null);
@@ -62,6 +65,7 @@ function App() {
   const [showAccessKey, setShowAccessKey] = useState(false);
   const [mathProblem, setMathProblem] = useState(generateMathProblem());
   const [mathAnswer, setMathAnswer] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -104,6 +108,14 @@ function App() {
     setLoading(true);
 
     try {
+      // Check if Turnstile is enabled and token is required
+      const turnstileEnabled = import.meta.env.VITE_TURNSTILE_ENABLED === 'true';
+      if (turnstileEnabled && !turnstileToken) {
+        toast.error('Please complete the security verification');
+        setLoading(false);
+        return;
+      }
+
       if (authMode === 'signup') {
         if (mathAnswer !== mathProblem.answer) {
           toast.error('Incorrect answer to the math problem');
@@ -554,6 +566,20 @@ function App() {
                 </div>
               </div>
             )}
+            
+            {/* Turnstile Widget */}
+            <TurnstileWidget
+              onVerify={(token) => setTurnstileToken(token)}
+              onError={() => {
+                setTurnstileToken(null);
+                toast.error('Security verification failed. Please try again.');
+              }}
+              onExpire={() => {
+                setTurnstileToken(null);
+                toast.error('Security verification expired. Please verify again.');
+              }}
+            />
+            
             <button
               type="submit"
               disabled={loading || (authMode === 'signup' && !mathAnswer)}
@@ -569,6 +595,7 @@ function App() {
                 setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
                 setMathProblem(generateMathProblem());
                 setMathAnswer('');
+                setTurnstileToken(null);
               }}
               className="text-amber-600 hover:text-amber-700 text-sm"
             >
