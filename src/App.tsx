@@ -96,6 +96,34 @@ function App() {
     setLoading(true);
 
     try {
+      // Basic validation
+      if (!email.trim()) {
+        toast.error('Please enter your email address');
+        setLoading(false);
+        return;
+      }
+
+      if (!password) {
+        toast.error('Please enter your password');
+        setLoading(false);
+        return;
+      }
+
+      // Email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        toast.error('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
+
+      // Password length validation for signup
+      if (authMode === 'signup' && password.length < 6) {
+        toast.error('Password must be at least 6 characters long');
+        setLoading(false);
+        return;
+      }
+
       // Check if Turnstile is enabled and token is required for both signin and signup
       const turnstileEnabled = import.meta.env.VITE_TURNSTILE_ENABLED === 'true';
       
@@ -121,7 +149,47 @@ function App() {
         toast.success('Signed in successfully!');
       }
     } catch (error: any) {
-      toast.error(error.message);
+      // Handle authentication errors with user-friendly messages
+      let errorMessage = 'An error occurred. Please try again.';
+      
+      // Check for Supabase error code first, then message
+      if (error.code || error.message) {
+        const errorCode = error.code;
+        const errorMsg = error.message || '';
+        
+        // Handle specific Supabase error codes
+        if (errorCode === 'invalid_credentials' || 
+            errorMsg.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password';
+        } else if (errorCode === 'email_not_confirmed' || 
+                   errorMsg.includes('Email not confirmed')) {
+          errorMessage = 'Please check your email and confirm your account';
+        } else if (errorCode === 'too_many_requests' || 
+                   errorMsg.includes('Email rate limit exceeded')) {
+          errorMessage = 'Too many attempts. Please try again later.';
+        } else if (errorMsg.includes('Password should be at least')) {
+          errorMessage = 'Password must be at least 6 characters long';
+        } else if (errorMsg.includes('Unable to validate email address') ||
+                   errorCode === 'invalid_email') {
+          errorMessage = 'Please enter a valid email address';
+        } else if (errorMsg.includes('User already registered') ||
+                   errorCode === 'user_already_exists') {
+          errorMessage = 'An account with this email already exists. Try signing in instead.';
+        } else if (errorMsg.includes('Signup is disabled') ||
+                   errorCode === 'signup_disabled') {
+          errorMessage = 'Account registration is currently disabled';
+        } else if (errorCode === 'weak_password') {
+          errorMessage = 'Password is too weak. Please choose a stronger password.';
+        } else if (authMode === 'signin') {
+          // For any other signin errors, use generic message for security
+          errorMessage = 'Invalid email or password';
+        } else {
+          // For signup, we can be more specific about other errors
+          errorMessage = errorMsg || 'Registration failed. Please try again.';
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -501,6 +569,7 @@ function App() {
   if (!user) {
     return (
       <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+        <Toaster position="top-center" />
         <div className="bg-yellow-50 p-8 rounded-lg shadow-md w-full max-w-md">
           <h1 className="text-2xl font-bold text-amber-900 mb-4 text-center">Welcome to ungry</h1>
           <form onSubmit={handleAuth} className="space-y-4">
@@ -531,9 +600,14 @@ function App() {
                 minLength={6}
               />
               {authMode === 'signup' && (
-                <p className="mt-1 text-xs text-amber-600">
-                  Password must be at least 6 characters long
-                </p>
+                <div className="mt-1 text-xs text-amber-600">
+                  <p>Password requirements:</p>
+                  <ul className="list-disc list-inside ml-2 space-y-1">
+                    <li className={password.length >= 6 ? 'text-green-600' : 'text-amber-600'}>
+                      At least 6 characters long
+                    </li>
+                  </ul>
+                </div>
               )}
             </div>
 
