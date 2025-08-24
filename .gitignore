@@ -27,3 +27,6 @@ dist-ssr
 
 # Supabase
 supabase/.temp
+
+# Kiro settings (contains API keys)
+.kiro/settings/
