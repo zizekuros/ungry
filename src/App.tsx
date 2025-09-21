@@ -24,8 +24,6 @@ function App() {
   const [currentList, setCurrentList] = useState<any>(null);
   const [listItems, setListItems] = useState<any[]>([]);
   const [newItem, setNewItem] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'date'>('date');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [accessKey, setAccessKey] = useState('');
@@ -406,7 +404,6 @@ function App() {
 
     setNewItem('');
     setListItems([...listItems, itemData]);
-    setShowSuggestions(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -790,29 +787,7 @@ function App() {
                 value={newItem}
                 onChange={handleInputChange}
                 onKeyPress={(e) => e.key === 'Enter' && addItem(newItem)}
-                list="item-suggestions"
               />
-              <datalist id="item-suggestions">
-                {suggestions.map((suggestion, index) => (
-                  <option key={index} value={suggestion} />
-                ))}
-              </datalist>
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 bg-yellow-50 border rounded-lg mt-1 shadow-lg z-10">
-                  {suggestions.map((suggestion, index) => (
-                    <div
-                      key={index}
-                      className="px-4 py-2 hover:bg-amber-50 cursor-pointer"
-                      onClick={() => {
-                        addItem(suggestion);
-                        setShowSuggestions(false);
-                      }}
-                    >
-                      {suggestion}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Items List */}
