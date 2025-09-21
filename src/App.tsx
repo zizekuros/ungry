@@ -394,39 +394,23 @@ function App() {
       return;
     }
 
-    // Update suggestions
+    // Log analytics event
     await supabase
-      .from('item_suggestions')
-      .upsert({
-        name: item.trim(),
-        usage_count: 1,
-        last_used: new Date().toISOString()
-      }, {
-        onConflict: 'name'
-      });
+      .from('user_item_analytics')
+      .insert([{
+        user_id: user.id,
+        list_id: currentList.id,
+        item_id: itemData.id,
+        action: 'added'
+      }]);
 
     setNewItem('');
     setListItems([...listItems, itemData]);
     setShowSuggestions(false);
   };
 
-  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setNewItem(value);
-    
-    if (value.trim()) {
-      const { data } = await supabase
-        .from('item_suggestions')
-        .select('name')
-        .ilike('name', `%${value}%`)
-        .order('usage_count', { ascending: false })
-        .limit(5);
-
-      setSuggestions(data?.map(s => s.name) || []);
-      setShowSuggestions(true);
-    } else {
-      setShowSuggestions(false);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewItem(e.target.value);
   };
 
   const deleteList = async (listId: string) => {
