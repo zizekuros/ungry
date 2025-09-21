@@ -30,3 +30,6 @@ supabase/.temp
 
 # Kiro settings (contains API keys)
 .kiro/settings/
+
+# Cursor settings
+.cursor/
