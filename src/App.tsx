@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn, Loader2 } from 'lucide-react';
+import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn, Loader2, User, X } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import TurnstileWidget from './components/TurnstileWidget';
 
@@ -37,6 +37,7 @@ function App() {
   const [showAccessKey, setShowAccessKey] = useState(false);
 
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -55,8 +56,14 @@ function App() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const user = session?.user ?? null;
+      setUser(user);
       setInitialLoading(false);
+
+      // Log app_metadata.subscription after successful authentication
+      if (user && user.app_metadata) {
+        console.log('User app_metadata.subscription:', user.app_metadata.subscription);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -124,7 +131,7 @@ function App() {
 
       // Check if Turnstile is enabled and token is required for both signin and signup
       const turnstileEnabled = import.meta.env.VITE_TURNSTILE_ENABLED === 'true';
-      
+
       if (turnstileEnabled && !turnstileToken) {
         toast.error('Please complete the security verification');
         setLoading(false);
@@ -132,49 +139,69 @@ function App() {
       }
 
       if (authMode === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
-        if (error) throw error;
+
+        if (error) {
+          // Handle manually created users who already exist
+          if (error.message?.includes('User already registered')) {
+            throw new Error('Account already exists. Please use "Sign In" instead, or contact support if you need help accessing your account.');
+          }
+
+          throw error;
+        }
+
+        // Normal new user registration
+        if (data.user?.app_metadata) {
+          console.log('New user app_metadata.subscription:', data.user.app_metadata.subscription);
+        }
+
         toast.success('Registration successful!');
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+
+        // Log app_metadata.subscription for signed in user
+        if (data.user?.app_metadata) {
+          console.log('Signed in user app_metadata.subscription:', data.user.app_metadata.subscription);
+        }
+
         toast.success('Signed in successfully!');
       }
     } catch (error: any) {
       // Handle authentication errors with user-friendly messages
       let errorMessage = 'An error occurred. Please try again.';
-      
+
       // Check for Supabase error code first, then message
       if (error.code || error.message) {
         const errorCode = error.code;
         const errorMsg = error.message || '';
-        
+
         // Handle specific Supabase error codes
-        if (errorCode === 'invalid_credentials' || 
-            errorMsg.includes('Invalid login credentials')) {
+        if (errorCode === 'invalid_credentials' ||
+          errorMsg.includes('Invalid login credentials')) {
           errorMessage = 'Invalid email or password';
-        } else if (errorCode === 'email_not_confirmed' || 
-                   errorMsg.includes('Email not confirmed')) {
+        } else if (errorCode === 'email_not_confirmed' ||
+          errorMsg.includes('Email not confirmed')) {
           errorMessage = 'Please check your email and confirm your account';
-        } else if (errorCode === 'too_many_requests' || 
-                   errorMsg.includes('Email rate limit exceeded')) {
+        } else if (errorCode === 'too_many_requests' ||
+          errorMsg.includes('Email rate limit exceeded')) {
           errorMessage = 'Too many attempts. Please try again later.';
         } else if (errorMsg.includes('Password should be at least')) {
           errorMessage = 'Password must be at least 6 characters long';
         } else if (errorMsg.includes('Unable to validate email address') ||
-                   errorCode === 'invalid_email') {
+          errorCode === 'invalid_email') {
           errorMessage = 'Please enter a valid email address';
         } else if (errorMsg.includes('User already registered') ||
-                   errorCode === 'user_already_exists') {
+          errorCode === 'user_already_exists') {
           errorMessage = 'An account with this email already exists. Try signing in instead.';
         } else if (errorMsg.includes('Signup is disabled') ||
-                   errorCode === 'signup_disabled') {
+          errorCode === 'signup_disabled') {
           errorMessage = 'Account registration is currently disabled';
         } else if (errorCode === 'weak_password') {
           errorMessage = 'Password is too weak. Please choose a stronger password.';
@@ -186,7 +213,7 @@ function App() {
           errorMessage = errorMsg || 'Registration failed. Please try again.';
         }
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -211,7 +238,7 @@ function App() {
     const { data: listsData, error: listsError } = await supabase
       .from('shopping_lists')
       .select('*');
-    
+
     if (listsError) {
       toast.error('Failed to load lists');
       return;
@@ -223,7 +250,7 @@ function App() {
         .from('list_items')
         .select('*')
         .eq('list_id', list.id);
-      
+
       // Check if user is a member of this list
       const { data: membership } = await supabase
         .from('list_members')
@@ -231,7 +258,7 @@ function App() {
         .eq('list_id', list.id)
         .eq('member_id', user.id)
         .maybeSingle();
-      
+
       return {
         ...list,
         itemsCount: items?.filter(i => !i.bought).length || 0,
@@ -282,7 +309,7 @@ function App() {
     }
 
     const accessKey = Math.random().toString(36).substring(2, 8).toUpperCase();
-    
+
     const { data, error } = await supabase
       .from('shopping_lists')
       .insert([{
@@ -368,7 +395,7 @@ function App() {
       .from('list_items')
       .select('*')
       .eq('list_id', list.id);
-    
+
     setListItems(items || []);
     window.history.pushState({}, '', `?list=${list.id}`);
     toast.success('Joined list successfully!');
@@ -491,7 +518,7 @@ function App() {
       return;
     }
 
-    setListItems(listItems.map(i => 
+    setListItems(listItems.map(i =>
       i.id === item.id ? { ...i, bought: !i.bought } : i
     ));
   };
@@ -524,7 +551,7 @@ function App() {
       .from('list_items')
       .select('*')
       .eq('list_id', list.id);
-    
+
     setListItems(items || []);
     window.history.pushState({}, '', `?list=${list.id}`);
   };
@@ -592,7 +619,7 @@ function App() {
               )}
             </div>
 
-            
+
             {/* Turnstile Widget - For both signin and signup */}
             <TurnstileWidget
               key={authMode}
@@ -600,7 +627,7 @@ function App() {
               onError={handleTurnstileError}
               onExpire={handleTurnstileExpire}
             />
-            
+
             <button
               type="submit"
               disabled={loading}
@@ -629,7 +656,71 @@ function App() {
   return (
     <div className="min-h-screen bg-amber-50">
       <Toaster position="top-center" />
-      
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-amber-900">Profile Information</h2>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-amber-700 mb-1">
+                  Email
+                </label>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  {user?.email || 'Not available'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-amber-700 mb-1">
+                  Subscription Plan
+                </label>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  {user?.app_metadata?.subscription?.plan || 'No subscription'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-amber-700 mb-1">
+                  Subscription Period
+                </label>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  {user?.app_metadata?.subscription?.period || 'N/A'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-amber-700 mb-1">
+                  Renewed Date
+                </label>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  {user?.app_metadata?.subscription?.renewed || 'N/A'}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="bg-amber-400 text-yellow-50 px-4 py-2 rounded-lg hover:bg-amber-300 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-amber-400 text-yellow-50 p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -656,6 +747,14 @@ function App() {
                 </button>
               </div>
             )}
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="bg-yellow-50 text-amber-600 p-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
+              title="Profile"
+            >
+              <User size={20} />
+              <span className="hidden sm:inline">Profile</span>
+            </button>
             <button
               onClick={handleLogout}
               className="bg-yellow-50 text-amber-600 p-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
