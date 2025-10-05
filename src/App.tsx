@@ -222,7 +222,19 @@ function App() {
           throw error;
         }
 
-        // Normal new user registration
+        // Check if email confirmation is required
+        if (data.user && !data.session) {
+          // Email confirmation is required
+          toast.success('Account created! Please check your email to confirm your account.', {
+            duration: 10000, // 10 seconds
+          });
+          setEmail('');
+          setPassword('');
+          setAuthMode('signin');
+          return;
+        }
+
+        // Normal new user registration (auto-confirmed)
         if (data.user?.app_metadata) {
           console.log('New user app_metadata.subscription:', data.user.app_metadata.subscription);
         }
