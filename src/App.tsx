@@ -28,7 +28,7 @@ function App() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [accessKey, setAccessKey] = useState('');
   const [user, setUser] = useState<any>(null);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'reset'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,6 +38,10 @@ function App() {
 
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const prevUserIdRef = useRef<string | null>(null);
+  
+  // Password reset states
+  const [showUpdatePassword, setShowUpdatePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
 
   // Function to refresh user metadata
   const refreshUserMetadata = async () => {
@@ -106,6 +110,14 @@ function App() {
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
+    // Check for password reset token in URL
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    
+    if (type === 'recovery') {
+      setShowUpdatePassword(true);
+    }
+
     // Check if user is authenticated and fetch fresh data
     const initializeAuth = async () => {
       try {
@@ -299,6 +311,82 @@ function App() {
       }
 
       toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (!email.trim()) {
+        toast.error('Please enter your email address');
+        setLoading(false);
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        toast.error('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
+
+      // Check Turnstile
+      const turnstileEnabled = import.meta.env.VITE_TURNSTILE_ENABLED === 'true';
+      if (turnstileEnabled && !turnstileToken) {
+        toast.error('Please complete the security verification');
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Password reset link sent! Check your email.', { duration: 10000 });
+      setEmail('');
+      setAuthMode('signin');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send reset email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (!newPassword) {
+        toast.error('Please enter a new password');
+        setLoading(false);
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        toast.error('Password must be at least 6 characters long');
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success('Password updated successfully!');
+      setShowUpdatePassword(false);
+      setNewPassword('');
+      window.location.hash = ''; // Clear the hash
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update password');
     } finally {
       setLoading(false);
     }
@@ -685,8 +773,10 @@ function App() {
       <div className="min-h-screen bg-amber-50 flex items-center justify-center">
         <Toaster position="top-center" />
         <div className="bg-yellow-50 p-8 rounded-lg shadow-md w-full max-w-md">
-          <h1 className="text-2xl font-bold text-amber-900 mb-4 text-center">Welcome to ungry</h1>
-          <form onSubmit={handleAuth} className="space-y-4">
+          <h1 className="text-2xl font-bold text-amber-900 mb-4 text-center">
+            {authMode === 'reset' ? 'Reset Password' : 'Welcome to ungry'}
+          </h1>
+          <form onSubmit={authMode === 'reset' ? handlePasswordReset : handleAuth} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-amber-700">
                 Email
@@ -700,33 +790,40 @@ function App() {
                 required
               />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-amber-700">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
-                required
-                minLength={6}
-              />
-              {authMode === 'signup' && (
-                <div className="mt-1 text-xs text-amber-600">
-                  <p>Password requirements:</p>
-                  <ul className="list-disc list-inside ml-2 space-y-1">
-                    <li className={password.length >= 6 ? 'text-green-600' : 'text-amber-600'}>
-                      At least 6 characters long
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
+            {authMode !== 'reset' && (
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-amber-700">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
+                  required
+                  minLength={6}
+                />
+                {authMode === 'signup' && (
+                  <div className="mt-1 text-xs text-amber-600">
+                    <p>Password requirements:</p>
+                    <ul className="list-disc list-inside ml-2 space-y-1">
+                      <li className={password.length >= 6 ? 'text-green-600' : 'text-amber-600'}>
+                        At least 6 characters long
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
 
+            {authMode === 'reset' && (
+              <p className="text-sm text-gray-600">
+                We'll send you a link to reset your password.
+              </p>
+            )}
 
-            {/* Turnstile Widget - For both signin and signup */}
+            {/* Turnstile Widget - For signin, signup, and reset */}
             <TurnstileWidget
               key={authMode}
               onVerify={handleTurnstileVerify}
@@ -744,19 +841,45 @@ function App() {
               }`}
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {loading ? 'Loading...' : authMode === 'signin' ? 'Sign In' : 'Sign Up'}
+              {loading ? 'Loading...' : authMode === 'signin' ? 'Sign In' : authMode === 'signup' ? 'Sign Up' : 'Send Reset Link'}
             </button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => {
-                setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
-                setTurnstileToken(null); // Reset token when switching modes
-              }}
-              className="text-amber-600 hover:text-amber-700 text-sm"
-            >
-              {authMode === 'signin' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
-            </button>
+          <div className="mt-4 text-center space-y-2">
+            {authMode === 'signin' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('reset');
+                  setTurnstileToken(null);
+                }}
+                className="text-amber-600 hover:text-amber-700 text-sm block w-full"
+              >
+                Forgot password?
+              </button>
+            )}
+            {authMode === 'reset' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('signin');
+                  setTurnstileToken(null);
+                }}
+                className="text-amber-600 hover:text-amber-700 text-sm block w-full"
+              >
+                Back to Sign In
+              </button>
+            )}
+            {authMode !== 'reset' && (
+              <button
+                onClick={() => {
+                  setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+                  setTurnstileToken(null); // Reset token when switching modes
+                }}
+                className="text-amber-600 hover:text-amber-700 text-sm"
+              >
+                {authMode === 'signin' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -766,6 +889,73 @@ function App() {
   return (
     <div className="min-h-screen bg-amber-50">
       <Toaster position="top-center" />
+
+      {/* Update Password Modal */}
+      {showUpdatePassword && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-amber-900">Update Password</h2>
+              <button
+                onClick={() => {
+                  setShowUpdatePassword(false);
+                  setNewPassword('');
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdatePassword}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-amber-700 mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  disabled={loading}
+                  minLength={6}
+                />
+                <div className="mt-1 text-xs text-amber-600">
+                  <p>Password requirements:</p>
+                  <ul className="list-disc list-inside ml-2 space-y-1">
+                    <li className={newPassword.length >= 6 ? 'text-green-600' : 'text-amber-600'}>
+                      At least 6 characters long
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUpdatePassword(false);
+                    setNewPassword('');
+                  }}
+                  className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-amber-400 text-yellow-50 px-4 py-2 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  disabled={loading}
+                >
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {loading ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Profile Modal */}
       {showProfileModal && (
