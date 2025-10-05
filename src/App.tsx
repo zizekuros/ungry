@@ -759,7 +759,7 @@ function App() {
         <div className="flex flex-col items-center gap-4">
           <div className="flex items-center gap-2 text-amber-600">
             <ShoppingCart className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">ungry</h1>
+            <h1 className="text-2xl font-bold">Ungry</h1>
           </div>
           <div className="flex items-center gap-2 text-amber-700">
             <Loader2 className="w-6 h-6 animate-spin" />
@@ -776,7 +776,7 @@ function App() {
         <Toaster position="top-center" />
         <div className="bg-yellow-50 p-8 rounded-lg shadow-md w-full max-w-md">
           <h1 className="text-2xl font-bold text-amber-900 mb-4 text-center">
-            {authMode === 'reset' ? 'Reset Password' : 'Welcome to ungry'}
+            {authMode === 'reset' ? 'Reset Password' : 'Welcome to Ungry'}
           </h1>
           <form onSubmit={authMode === 'reset' ? handlePasswordReset : handleAuth} className="space-y-4">
             <div>
@@ -1060,7 +1060,7 @@ function App() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">ungry</h1>
+            <h1 className="text-2xl font-bold">Ungry</h1>
           </div>
           <div className="flex items-center gap-4">
             {!currentList && (
