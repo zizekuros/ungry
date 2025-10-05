@@ -154,10 +154,18 @@ This creates a `dist/` folder with optimized static files ready for deployment.
    - Your app will be available at `https://your-app.your-subdomain.workers.dev`
 
 ## Database Schema
+
+### Core Tables
 - `shopping_lists`: List metadata and access keys
 - `list_items`: Individual items with bought status
 - `list_members`: User permissions for shared lists
-- `item_suggestions`: Autocomplete suggestions
+
+### Analytics & Subscriptions
+- `user_item_analytics`: Tracks user actions (items added, bought, cleared) for analytics
+- `subscriptions_temp`: Temporary storage for subscriptions purchased before user signup
+
+### Setup
+Run all migrations in `supabase/migrations/` in order (by date prefix) in your Supabase SQL Editor.
 
 ## Security
 - Row Level Security (RLS) policies ensure data isolation
