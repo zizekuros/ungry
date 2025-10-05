@@ -35,12 +35,15 @@ const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
 
 
         return (
-            <div className="flex justify-center">
+            <div className="w-full">
                 <Turnstile
                     siteKey={siteKey}
                     onSuccess={handleSuccess}
                     onError={handleError}
                     onExpire={handleExpire}
+                    options={{
+                        size: 'flexible'
+                    }}
                 />
             </div>
         );
