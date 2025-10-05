@@ -41,6 +41,7 @@ ungry/
 ├── cloudflare/
 │   ├── worker.js          # Cloudflare Worker for SPA routing
 │   └── wrangler.toml      # Cloudflare deployment config
+├── public/                # Static assets (icons, manifest)
 ├── src/
 │   ├── App.tsx            # Main React application
 │   ├── main.tsx           # React entry point
