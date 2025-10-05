@@ -400,6 +400,8 @@ function App() {
       setCurrentList(null);
       setListItems([]);
       setAuthMode('signin');
+      setEmail('');
+      setPassword('');
       window.history.pushState({}, '', '/');
       toast.success('Signed out successfully');
     }
