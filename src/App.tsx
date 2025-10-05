@@ -106,11 +106,32 @@ function App() {
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
-    // Check if user is authenticated
+    // Check if user is authenticated and fetch fresh data
     const initializeAuth = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
+        // Get session first to check if user is logged in
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Force a fresh fetch from the server instead of using cached data
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+            console.log('Initial user data loaded with fresh metadata:', userData.app_metadata);
+          } else {
+            // Fallback to cached user if fetch fails
+            setUser(session.user);
+          }
+        } else {
+          setUser(null);
+        }
       } catch (error) {
         console.error('Error checking auth:', error);
       } finally {
