@@ -124,7 +124,6 @@ function App() {
           if (response.ok) {
             const userData = await response.json();
             setUser(userData);
-            console.log('Initial user data loaded with fresh metadata:', userData.app_metadata);
           } else {
             // Fallback to cached user if fetch fails
             setUser(session.user);
@@ -146,11 +145,6 @@ function App() {
       const user = session?.user ?? null;
       setUser(user);
       setInitialLoading(false);
-
-      // Log app_metadata.subscription after successful authentication
-      if (user && user.app_metadata) {
-        console.log('User app_metadata.subscription:', user.app_metadata.subscription);
-      }
     });
 
     return () => subscription.unsubscribe();
@@ -834,7 +828,6 @@ function App() {
                       const userData = await response.json();
                       setUser(userData);
                       toast.success('Profile data refreshed!');
-                      console.log('User metadata refreshed:', userData.app_metadata);
                     } else {
                       toast.error('Failed to refresh profile data');
                     }
