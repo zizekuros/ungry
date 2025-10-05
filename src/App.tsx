@@ -38,6 +38,40 @@ function App() {
 
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
+  // Function to refresh user metadata
+  const refreshUserMetadata = async () => {
+    if (!user) return;
+    
+    try {
+      // Force a fresh fetch by calling the auth endpoint directly
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+        }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        if (userData) {
+          setUser(userData);
+          console.log('User metadata refreshed:', userData.app_metadata);
+          
+          // Log subscription specifically
+          if (userData.app_metadata?.subscription) {
+            console.log('Subscription found:', userData.app_metadata.subscription);
+          } else {
+            console.log('No subscription in app_metadata');
+          }
+        }
+      } else {
+        console.error('Failed to fetch user data:', response.status);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user metadata:', error);
+    }
+  };
+
   // Function to process temp subscription after signup
   const processTempSubscriptionAfterSignup = async (userEmail: string) => {
     try {
@@ -97,7 +131,18 @@ function App() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Set up automatic metadata refresh every 60 seconds
+    const metadataRefreshInterval = setInterval(() => {
+      if (user) {
+        refreshUserMetadata();
+      }
+    }, 60000); // 60 seconds
+
+    // Cleanup interval on unmount
+    return () => {
+      clearInterval(metadataRefreshInterval);
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
