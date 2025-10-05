@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn, Loader2, User, X } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
@@ -37,6 +37,7 @@ function App() {
   const [showAccessKey, setShowAccessKey] = useState(false);
 
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const prevUserIdRef = useRef<string | null>(null);
 
   // Function to refresh user metadata
   const refreshUserMetadata = async () => {
@@ -131,31 +132,8 @@ function App() {
       }
     });
 
-    // Set up automatic metadata refresh every 60 seconds
-    const metadataRefreshInterval = setInterval(() => {
-      if (user) {
-        refreshUserMetadata();
-      }
-    }, 60000); // 60 seconds
-
-    // Cleanup interval on unmount
-    return () => {
-      clearInterval(metadataRefreshInterval);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      // Check URL for list ID
-      const listId = new URLSearchParams(window.location.search).get('list');
-      if (listId) {
-        loadListById(listId);
-      } else {
-        loadLists();
-      }
-    }
-  }, [user]);
 
   // Turnstile callback handlers
   const handleTurnstileVerify = useCallback((token: string) => {
@@ -311,7 +289,7 @@ function App() {
     }
   };
 
-  const loadLists = async () => {
+  const loadLists = useCallback(async () => {
     if (!user) return;
 
     const { data: listsData, error: listsError } = await supabase
@@ -347,9 +325,9 @@ function App() {
     }));
 
     setLists(listsWithItems);
-  };
+  }, [user]);
 
-  const loadListById = async (id: string) => {
+  const loadListById = useCallback(async (id: string) => {
     if (!user) return;
 
     const { data: list, error: listError } = await supabase
@@ -374,7 +352,28 @@ function App() {
       // Update URL
       window.history.pushState({}, '', `?list=${list.id}`);
     }
-  };
+  }, [user]);
+
+  // Load lists/items when user changes
+  useEffect(() => {
+    const currentUserId = user?.id || null;
+    
+    // Only load if user ID actually changed
+    if (currentUserId && currentUserId !== prevUserIdRef.current) {
+      prevUserIdRef.current = currentUserId;
+      
+      // Check URL for list ID
+      const listId = new URLSearchParams(window.location.search).get('list');
+      if (listId) {
+        loadListById(listId);
+      } else {
+        loadLists();
+      }
+    } else if (!currentUserId) {
+      prevUserIdRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const createNewList = async () => {
     if (!user) {
