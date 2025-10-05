@@ -37,6 +37,30 @@ function App() {
   const [showAccessKey, setShowAccessKey] = useState(false);
 
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  // Function to process temp subscription after signup
+  const processTempSubscriptionAfterSignup = async (userEmail: string) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('process_user_temp_subscription', {
+          user_email: userEmail
+        });
+
+      if (error) {
+        console.error('Failed to process temp subscription:', error);
+        return;
+      }
+
+      if (data?.success) {
+        console.log('Temp subscription processed:', data.subscription_data);
+        toast.success('Subscription activated!');
+      } else {
+        console.log('No temp subscription found for user');
+      }
+    } catch (error) {
+      console.error('Error processing temp subscription:', error);
+    }
+  };
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
@@ -157,6 +181,9 @@ function App() {
         if (data.user?.app_metadata) {
           console.log('New user app_metadata.subscription:', data.user.app_metadata.subscription);
         }
+
+        // Process temp subscription for new user
+        await processTempSubscriptionAfterSignup(email);
 
         toast.success('Registration successful!');
       } else {
