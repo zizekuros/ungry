@@ -54,6 +54,13 @@ function App() {
       if (data?.success) {
         console.log('Temp subscription processed:', data.subscription_data);
         toast.success('Subscription activated!');
+        
+        // Refresh user data to get updated app_metadata
+        const { data: { user: refreshedUser } } = await supabase.auth.getUser();
+        if (refreshedUser) {
+          setUser(refreshedUser);
+          console.log('User refreshed with updated metadata:', refreshedUser.app_metadata);
+        }
       } else {
         console.log('No temp subscription found for user');
       }
