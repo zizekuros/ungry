@@ -787,7 +787,40 @@ function App() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-between">
+              <button
+                onClick={async () => {
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session?.user) {
+                      toast.error('No active session');
+                      return;
+                    }
+                    
+                    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
+                      headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+                      }
+                    });
+                    
+                    if (response.ok) {
+                      const userData = await response.json();
+                      setUser(userData);
+                      toast.success('Profile data refreshed!');
+                      console.log('User metadata refreshed:', userData.app_metadata);
+                    } else {
+                      toast.error('Failed to refresh profile data');
+                    }
+                  } catch (error) {
+                    console.error('Failed to refresh user metadata:', error);
+                    toast.error('Error refreshing profile data');
+                  }
+                }}
+                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Refresh Profile
+              </button>
               <button
                 onClick={() => setShowProfileModal(false)}
                 className="bg-amber-400 text-yellow-50 px-4 py-2 rounded-lg hover:bg-amber-300 transition-colors"
