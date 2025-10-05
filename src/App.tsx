@@ -284,6 +284,7 @@ function App() {
     } else {
       setCurrentList(null);
       setListItems([]);
+      setAuthMode('signin');
       window.history.pushState({}, '', '/');
       toast.success('Signed out successfully');
     }
@@ -709,7 +710,11 @@ function App() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-400 text-yellow-50 px-6 py-2 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className={`w-full px-6 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
+                authMode === 'signin' 
+                  ? 'bg-amber-400 text-yellow-50 hover:bg-amber-300' 
+                  : 'bg-gray-500 text-white hover:bg-gray-600'
+              }`}
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? 'Loading...' : authMode === 'signin' ? 'Sign In' : 'Sign Up'}
