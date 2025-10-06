@@ -125,21 +125,9 @@ function App() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Force a fresh fetch from the server instead of using cached data
-          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
-            }
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          } else {
-            // Fallback to cached user if fetch fails
-            setUser(session.user);
-          }
+          setUser(session.user);
+          // Don't process temp subscription here - let onAuthStateChange handle it
+          // to avoid duplicate processing
         } else {
           setUser(null);
         }
@@ -153,10 +141,20 @@ function App() {
     initializeAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user ?? null;
       setUser(user);
       setInitialLoading(false);
+
+      // Process temp subscription when user signs in after email confirmation
+      // The SIGNED_IN event fires when user clicks the confirmation link
+      // Only process if user doesn't already have a subscription (edge case, happens once)
+      if (user?.email && _event === 'SIGNED_IN' && !user.app_metadata?.subscription) {
+        // Run in background without blocking UI
+        processTempSubscriptionAfterSignup(user.email).catch(err => {
+          console.error('Subscription processing failed:', err);
+        });
+      }
     });
 
     return () => subscription.unsubscribe();
