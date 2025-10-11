@@ -125,9 +125,21 @@ function App() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          setUser(session.user);
-          // Don't process temp subscription here - let onAuthStateChange handle it
-          // to avoid duplicate processing
+          // Fetch fresh user data from server to get latest app_metadata (including subscription)
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+            }
+          });
+          
+          if (response.ok) {
+            const freshUserData = await response.json();
+            setUser(freshUserData);
+          } else {
+            // Fallback to cached user if fetch fails
+            setUser(session.user);
+          }
         } else {
           setUser(null);
         }
