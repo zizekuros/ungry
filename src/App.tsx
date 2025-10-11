@@ -514,6 +514,23 @@ function App() {
       return;
     }
 
+    // Check subscription limits before creating list
+    const { data: limitCheck, error: limitError } = await supabase.rpc('check_user_subscription_limit', {
+      user_id_param: user.id,
+      action_type: 'create_list'
+    });
+
+    if (limitError) {
+      toast.error('Failed to check subscription limits');
+      console.error('Limit check error:', limitError);
+      return;
+    }
+
+    if (!limitCheck.allowed) {
+      toast.error(limitCheck.message || 'Cannot create list due to subscription limits');
+      return;
+    }
+
     const accessKey = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const { data, error } = await supabase
@@ -610,6 +627,23 @@ function App() {
 
   const addItem = async (item: string) => {
     if (!item.trim() || !currentList || !user) return;
+
+    // Check subscription limits before adding item
+    const { data: limitCheck, error: limitError } = await supabase.rpc('check_user_subscription_limit', {
+      user_id_param: user.id,
+      action_type: 'add_item'
+    });
+
+    if (limitError) {
+      toast.error('Failed to check subscription limits');
+      console.error('Limit check error:', limitError);
+      return;
+    }
+
+    if (!limitCheck.allowed) {
+      toast.error(limitCheck.message || 'Cannot add item due to subscription limits');
+      return;
+    }
 
     const { data: itemData, error: itemError } = await supabase
       .from('list_items')
