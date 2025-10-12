@@ -79,6 +79,21 @@ function App() {
     // Check for password reset token in URL
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
+    const error = hashParams.get('error');
+    const errorCode = hashParams.get('error_code');
+    const errorDescription = hashParams.get('error_description');
+    
+    // Handle email confirmation errors (e.g., expired or already confirmed links)
+    if (error && errorCode) {
+      if (errorCode === 'otp_expired' && error === 'access_denied') {
+        const message = errorDescription 
+          ? decodeURIComponent(errorDescription.replace(/\+/g, ' '))
+          : 'Email confirmation link has expired or is invalid';
+        toast.error(message, { duration: 6000 });
+        // Clear the error parameters from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
     
     if (type === 'recovery') {
       setShowUpdatePassword(true);
