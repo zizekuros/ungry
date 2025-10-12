@@ -43,40 +43,6 @@ function App() {
   const [showUpdatePassword, setShowUpdatePassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
 
-  // Function to refresh user metadata
-  const refreshUserMetadata = async () => {
-    if (!user) return;
-    
-    try {
-      // Force a fresh fetch by calling the auth endpoint directly
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
-        }
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        if (userData) {
-          setUser(userData);
-          console.log('User metadata refreshed:', userData.app_metadata);
-          
-          // Log subscription specifically
-          if (userData.app_metadata?.subscription) {
-            console.log('Subscription found:', userData.app_metadata.subscription);
-          } else {
-            console.log('No subscription in app_metadata');
-          }
-        }
-      } else {
-        console.error('Failed to fetch user data:', response.status);
-      }
-    } catch (error) {
-      console.error('Failed to refresh user metadata:', error);
-    }
-  };
-
   // Function to process temp subscription after signup
   const processTempSubscriptionAfterSignup = async (userEmail: string) => {
     try {
@@ -154,16 +120,43 @@ function App() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user ?? null;
-      setUser(user);
+      console.log('Auth state changed:', _event);
+      
+      if (session?.user) {
+        // Fetch fresh user data from server to avoid using cached/stale data
+        try {
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+            }
+          });
+          
+          if (response.ok) {
+            const freshUserData = await response.json();
+            setUser(freshUserData);
+            console.log('Fresh user data loaded on auth state change');
+          } else {
+            // Fallback to session user if fetch fails
+            setUser(session.user);
+          }
+        } catch (error) {
+          console.error('Failed to fetch fresh user data on auth state change:', error);
+          // Fallback to session user if fetch fails
+          setUser(session.user);
+        }
+      } else {
+        setUser(null);
+      }
+      
       setInitialLoading(false);
 
       // Process temp subscription when user signs in after email confirmation
       // The SIGNED_IN event fires when user clicks the confirmation link
       // Only process if user doesn't already have a subscription (edge case, happens once)
-      if (user?.email && _event === 'SIGNED_IN' && !user.app_metadata?.subscription) {
+      if (session?.user?.email && _event === 'SIGNED_IN' && !session.user.app_metadata?.subscription) {
         // Run in background without blocking UI
-        processTempSubscriptionAfterSignup(user.email).catch(err => {
+        processTempSubscriptionAfterSignup(session.user.email).catch(err => {
           console.error('Subscription processing failed:', err);
         });
       }
@@ -677,6 +670,91 @@ function App() {
     setNewItem(e.target.value);
   };
 
+  // Helper function to calculate effective subscription plan and status
+  const getSubscriptionStatus = () => {
+    const subscription = user?.app_metadata?.subscription;
+    
+    if (!subscription) {
+      return {
+        plan: 'free',
+        effectivePlan: 'free',
+        period: null,
+        renewed: null,
+        isActive: true,
+        validUntil: null,
+        isExpired: false
+      };
+    }
+
+    const plan = subscription.plan || 'free';
+    const period = subscription.period;
+    const renewed = subscription.renewed;
+
+    // Free plan is always active
+    if (plan === 'free' || !renewed || !period) {
+      return {
+        plan,
+        effectivePlan: plan,
+        period,
+        renewed,
+        isActive: true,
+        validUntil: null,
+        isExpired: false
+      };
+    }
+
+    // Forever period never expires
+    if (period === 'forever') {
+      return {
+        plan,
+        effectivePlan: plan,
+        period,
+        renewed,
+        isActive: true,
+        validUntil: null,
+        isExpired: false
+      };
+    }
+
+    // Calculate expiration date for monthly/annual
+    const renewedDate = new Date(renewed);
+    let validUntil: Date;
+
+    if (period === 'annual') {
+      validUntil = new Date(renewedDate);
+      validUntil.setFullYear(validUntil.getFullYear() + 1);
+      validUntil.setHours(23, 59, 59, 999);
+    } else if (period === 'monthly') {
+      validUntil = new Date(renewedDate);
+      validUntil.setMonth(validUntil.getMonth() + 1);
+      validUntil.setHours(23, 59, 59, 999);
+    } else {
+      // Unknown period, treat as expired
+      return {
+        plan,
+        effectivePlan: 'free',
+        period,
+        renewed,
+        isActive: false,
+        validUntil: renewedDate,
+        isExpired: true
+      };
+    }
+
+    const now = new Date();
+    const isActive = now <= validUntil;
+
+    return {
+      plan,
+      effectivePlan: isActive ? plan : 'free',
+      period,
+      renewed,
+      isActive,
+      validUntil,
+      isExpired: !isActive
+    };
+  };
+
   const deleteList = async (listId: string) => {
     if (!user) return;
 
@@ -1027,32 +1105,117 @@ function App() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-amber-700 mb-1">
-                  Subscription Plan
-                </label>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  {user?.app_metadata?.subscription?.plan || 'No subscription'}
-                </div>
-              </div>
+              {(() => {
+                const status = getSubscriptionStatus();
+                return (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-amber-700 mb-1">
+                        Current Plan
+                      </label>
+                      <div className={`p-3 rounded-lg font-medium ${
+                        status.effectivePlan === 'free' 
+                          ? 'bg-gray-100 text-gray-700' 
+                          : status.effectivePlan === 'standard'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {status.effectivePlan.charAt(0).toUpperCase() + status.effectivePlan.slice(1)}
+                        {status.isExpired && status.plan !== 'free' && (
+                          <span className="ml-2 text-xs text-red-600">(Subscription Expired)</span>
+                        )}
+                      </div>
+                    </div>
 
-              <div>
-                <label className="block text-sm font-medium text-amber-700 mb-1">
-                  Subscription Period
-                </label>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  {user?.app_metadata?.subscription?.period || 'N/A'}
-                </div>
-              </div>
+                    {status.plan !== 'free' && status.plan !== status.effectivePlan && (
+                      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg">
+                        <p className="text-sm text-amber-800">
+                          ⚠️ Your <strong>{status.plan}</strong> subscription has expired. You're currently using the app with <strong>Free plan</strong> limits until you renew.
+                        </p>
+                      </div>
+                    )}
 
-              <div>
-                <label className="block text-sm font-medium text-amber-700 mb-1">
-                  Renewed Date
-                </label>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  {user?.app_metadata?.subscription?.renewed || 'N/A'}
-                </div>
-              </div>
+                    {status.plan !== 'free' && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-amber-700 mb-1">
+                            Subscription Plan
+                          </label>
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            {status.plan.charAt(0).toUpperCase() + status.plan.slice(1)}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-amber-700 mb-1">
+                            Subscription Period
+                          </label>
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            {status.period ? status.period.charAt(0).toUpperCase() + status.period.slice(1) : 'N/A'}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-amber-700 mb-1">
+                            Renewed Date
+                          </label>
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            {status.renewed ? new Date(status.renewed).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : 'N/A'}
+                          </div>
+                        </div>
+
+                        {status.validUntil && status.isActive && (
+                          <div>
+                            <label className="block text-sm font-medium text-amber-700 mb-1">
+                              Valid Until
+                            </label>
+                            <div className="bg-green-50 p-3 rounded-lg text-green-700">
+                              {status.validUntil.toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {status.validUntil && !status.isActive && (
+                          <div>
+                            <label className="block text-sm font-medium text-amber-700 mb-1">
+                              Expired On
+                            </label>
+                            <div className="bg-red-50 p-3 rounded-lg text-red-700">
+                              {status.validUntil.toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {status.period === 'forever' && (
+                          <div className="bg-purple-50 border border-purple-200 p-3 rounded-lg">
+                            <p className="text-sm text-purple-800">
+                              ✨ You have a <strong>lifetime subscription</strong>. Your subscription never expires!
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             <div className="mt-6 flex justify-between">
