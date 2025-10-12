@@ -1113,13 +1113,7 @@ function App() {
                       <label className="block text-sm font-medium text-amber-700 mb-1">
                         Current Plan
                       </label>
-                      <div className={`p-3 rounded-lg font-medium ${
-                        status.effectivePlan === 'free' 
-                          ? 'bg-gray-100 text-gray-700' 
-                          : status.effectivePlan === 'standard'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-green-100 text-green-700'
-                      }`}>
+                      <div className={`p-3 rounded-lg font-medium bg-gray-100 text-gray-700`}>
                         {status.effectivePlan.charAt(0).toUpperCase() + status.effectivePlan.slice(1)}
                         {status.isExpired && status.plan !== 'free' && (
                           <span className="ml-2 text-xs text-red-600">(Subscription Expired)</span>
