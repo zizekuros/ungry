@@ -1286,6 +1286,7 @@ function App() {
                   placeholder="New List"
                   value={newListName}
                   onChange={(e) => setNewListName(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && createNewList()}
                   className="px-3 py-2 rounded-lg text-amber-900"
                 />
                 <button
@@ -1326,6 +1327,7 @@ function App() {
               placeholder="New List"
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && createNewList()}
               className="flex-1 px-3 py-2 rounded-lg border"
             />
             <button
