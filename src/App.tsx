@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { PlusCircle, Share2, ArrowLeft, Check, Copy, Eye, EyeOff, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn, Loader2, User, X } from 'lucide-react';
+import { PlusCircle, Share2, ArrowLeft, Check, Copy, Trash, Trash2, ShoppingCart, LogOut, ArrowDownAZ, ArrowDownUp, LogIn, Loader2, User, X } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import TurnstileWidget from './components/TurnstileWidget';
 
@@ -34,7 +34,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [newListName, setNewListName] = useState('');
-  const [showAccessKey, setShowAccessKey] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareModalList, setShareModalList] = useState<any>(null);
+  const [shareModalTab, setShareModalTab] = useState<'access-key' | 'invite'>('access-key');
 
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const prevUserIdRef = useRef<string | null>(null);
@@ -824,9 +826,17 @@ function App() {
     toast.success('Left the list successfully!');
   };
 
-  const copyAccessKey = (list: any) => {
-    navigator.clipboard.writeText(list.access_key);
-    toast.success('Access key copied to clipboard!');
+  const openShareModal = (list: any) => {
+    setShareModalList(list);
+    setShareModalTab('access-key');
+    setShowShareModal(true);
+  };
+
+  const copyAccessKeyToClipboard = () => {
+    if (shareModalList) {
+      navigator.clipboard.writeText(shareModalList.access_key);
+      toast.success('Access key copied to clipboard!');
+    }
   };
 
   const sortItems = (items: any[]) => {
@@ -1271,6 +1281,108 @@ function App() {
         </div>
       )}
 
+      {/* Share Modal */}
+      {showShareModal && shareModalList && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-amber-900">Share List</h2>
+              <button
+                onClick={() => {
+                  setShowShareModal(false);
+                  setShareModalList(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-2 mb-4 border-b">
+              <button
+                onClick={() => setShareModalTab('access-key')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  shareModalTab === 'access-key'
+                    ? 'text-amber-600 border-b-2 border-amber-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Access Key
+              </button>
+              <button
+                onClick={() => setShareModalTab('invite')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  shareModalTab === 'invite'
+                    ? 'text-amber-600 border-b-2 border-amber-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Invite by Email
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="min-h-[200px]">
+              {shareModalTab === 'access-key' && (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    Share this access key with others so they can join your list:
+                  </p>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-mono font-bold text-amber-900">
+                        {shareModalList.access_key}
+                      </span>
+                      <button
+                        onClick={copyAccessKeyToClipboard}
+                        className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                        title="Copy to clipboard"
+                      >
+                        <Copy size={20} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg">
+                    <p className="text-sm text-amber-800">
+                      💡 Anyone with this key can view and edit this list.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {shareModalTab === 'invite' && (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    Invite someone to join your list by sending them an email invitation.
+                  </p>
+                  <div>
+                    <label className="block text-sm font-medium text-amber-700 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="friend@example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      disabled
+                    />
+                  </div>
+                  <button
+                    className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed"
+                    disabled
+                  >
+                    Coming Soon
+                  </button>
+                  <p className="text-xs text-gray-500 text-center">
+                    This feature will be available soon!
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-amber-400 text-yellow-50 p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -1384,17 +1496,12 @@ function App() {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setShowAccessKey(!showAccessKey)}
+                  onClick={() => openShareModal(currentList)}
                   className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
-                  title={showAccessKey ? "Hide access key" : "Show access key"}
+                  title="Share list"
                 >
-                  {showAccessKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                  <Share2 size={18} />
                 </button>
-                {showAccessKey && (
-                  <span className="text-sm font-mono bg-amber-100 px-2 py-1 rounded">
-                    {currentList.access_key}
-                  </span>
-                )}
                 <div className="relative">
                   <button
                     onClick={() => setShowSortMenu(!showSortMenu)}
@@ -1535,12 +1642,12 @@ function App() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyAccessKey(list);
+                        openShareModal(list);
                       }}
                       className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
-                      title="Copy access key"
+                      title="Share list"
                     >
-                      <Copy size={18} />
+                      <Share2 size={18} />
                     </button>
                     <span className="text-sm text-gray-500">
                       {new Date(list.created_at).toLocaleDateString()}
