@@ -76,6 +76,7 @@ function App() {
     }
   };
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [refreshingProfile, setRefreshingProfile] = useState(false);
 
   useEffect(() => {
     // Check for password reset token in URL
@@ -1120,7 +1121,7 @@ function App() {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className={`space-y-4 transition-opacity duration-300 ${refreshingProfile ? 'opacity-30' : 'opacity-100'}`}>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Email
@@ -1240,10 +1241,12 @@ function App() {
             <div className="mt-6 flex justify-between">
               <button
                 onClick={async () => {
+                  setRefreshingProfile(true);
                   try {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (!session?.user) {
                       toast.error('No active session');
+                      setRefreshingProfile(false);
                       return;
                     }
                     
@@ -1256,6 +1259,8 @@ function App() {
                     
                     if (response.ok) {
                       const userData = await response.json();
+                      // Add a small delay to show the animation
+                      await new Promise(resolve => setTimeout(resolve, 500));
                       setUser(userData);
                       toast.success('Profile data refreshed!');
                     } else {
@@ -1264,11 +1269,15 @@ function App() {
                   } catch (error) {
                     console.error('Failed to refresh user metadata:', error);
                     toast.error('Error refreshing profile data');
+                  } finally {
+                    setRefreshingProfile(false);
                   }
                 }}
-                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                disabled={refreshingProfile}
+                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center gap-2"
               >
-                Refresh Profile
+                {refreshingProfile && <Loader2 className="w-4 h-4 animate-spin" />}
+                {refreshingProfile ? 'Refreshing...' : 'Refresh Profile'}
               </button>
               <button
                 onClick={() => setShowProfileModal(false)}
