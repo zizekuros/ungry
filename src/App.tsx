@@ -902,13 +902,13 @@ function App() {
   // Show loading spinner while checking authentication
   if (initialLoading) {
     return (
-      <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="flex items-center gap-2 text-amber-600">
+          <div className="flex items-center gap-2 text-blue-600">
             <ShoppingCart className="w-8 h-8" />
             <h1 className="text-2xl font-bold">Ungry</h1>
           </div>
-          <div className="flex items-center gap-2 text-amber-700">
+          <div className="flex items-center gap-2 text-slate-700">
             <Loader2 className="w-6 h-6 animate-spin" />
             <span>Loading...</span>
           </div>
@@ -919,15 +919,15 @@ function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Toaster position="top-center" />
-        <div className="bg-yellow-50 p-8 rounded-lg shadow-md w-full max-w-md">
-          <h1 className="text-2xl font-bold text-amber-900 mb-4 text-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-slate-200">
+          <h1 className="text-2xl font-bold text-slate-900 mb-4 text-center">
             {authMode === 'reset' ? 'Reset Password' : 'Welcome to Ungry'}
           </h1>
           <form onSubmit={authMode === 'reset' ? handlePasswordReset : handleAuth} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-amber-700">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                 Email
               </label>
               <input
@@ -935,13 +935,13 @@ function App() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
+                className="mt-1 block w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
             {authMode !== 'reset' && (
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-amber-700">
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                   Password
                 </label>
                 <input
@@ -949,15 +949,15 @@ function App() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
+                  className="mt-1 block w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                   minLength={6}
                 />
                 {authMode === 'signup' && (
-                  <div className="mt-1 text-xs text-amber-600">
+                  <div className="mt-1 text-xs text-slate-600">
                     <p>Password requirements:</p>
                     <ul className="list-disc list-inside ml-2 space-y-1">
-                      <li className={password.length >= 6 ? 'text-green-600' : 'text-amber-600'}>
+                      <li className={password.length >= 6 ? 'text-green-600' : 'text-slate-600'}>
                         At least 6 characters long
                       </li>
                     </ul>
@@ -985,8 +985,8 @@ function App() {
               disabled={loading}
               className={`w-full px-6 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
                 authMode === 'signin' 
-                  ? 'bg-amber-400 text-yellow-50 hover:bg-amber-300' 
-                  : 'bg-gray-500 text-white hover:bg-gray-600'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-slate-600 text-white hover:bg-slate-700'
               }`}
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -1001,7 +1001,7 @@ function App() {
                   setAuthMode('reset');
                   setTurnstileToken(null);
                 }}
-                className="text-amber-600 hover:text-amber-700 text-sm block w-full"
+                className="text-blue-600 hover:text-blue-700 text-sm block w-full"
               >
                 Forgot password?
               </button>
@@ -1013,7 +1013,7 @@ function App() {
                   setAuthMode('signin');
                   setTurnstileToken(null);
                 }}
-                className="text-amber-600 hover:text-amber-700 text-sm block w-full"
+                className="text-blue-600 hover:text-blue-700 text-sm block w-full"
               >
                 Back to Sign In
               </button>
@@ -1024,7 +1024,7 @@ function App() {
                   setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
                   setTurnstileToken(null); // Reset token when switching modes
                 }}
-                className="text-amber-600 hover:text-amber-700 text-sm"
+                className="text-blue-600 hover:text-blue-700 text-sm"
               >
                 {authMode === 'signin' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
               </button>
@@ -1036,7 +1036,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div className="min-h-screen bg-slate-50">
       <Toaster position="top-center" />
 
       {/* Update Password Modal */}
@@ -1044,7 +1044,7 @@ function App() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-amber-900">Update Password</h2>
+              <h2 className="text-xl font-bold text-slate-900">Update Password</h2>
               <button
                 onClick={() => {
                   setShowUpdatePassword(false);
@@ -1058,7 +1058,7 @@ function App() {
 
             <form onSubmit={handleUpdatePassword}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-amber-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   New Password
                 </label>
                 <input
@@ -1066,14 +1066,14 @@ function App() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new password"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={loading}
                   minLength={6}
                 />
-                <div className="mt-1 text-xs text-amber-600">
+                  <div className="mt-1 text-xs text-slate-600">
                   <p>Password requirements:</p>
                   <ul className="list-disc list-inside ml-2 space-y-1">
-                    <li className={newPassword.length >= 6 ? 'text-green-600' : 'text-amber-600'}>
+                    <li className={newPassword.length >= 6 ? 'text-green-600' : 'text-slate-600'}>
                       At least 6 characters long
                     </li>
                   </ul>
@@ -1094,7 +1094,7 @@ function App() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-amber-400 text-yellow-50 px-4 py-2 rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   disabled={loading}
                 >
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -1111,7 +1111,7 @@ function App() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-amber-900">Profile Information</h2>
+              <h2 className="text-xl font-bold text-slate-900">Profile Information</h2>
               <button
                 onClick={() => setShowProfileModal(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -1122,7 +1122,7 @@ function App() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-amber-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Email
                 </label>
                 <div className="bg-gray-50 p-3 rounded-lg">
@@ -1135,7 +1135,7 @@ function App() {
                 return (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-amber-700 mb-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
                         Current Plan
                       </label>
                       <div className={`p-3 rounded-lg font-medium bg-gray-100 text-gray-700`}>
@@ -1147,8 +1147,8 @@ function App() {
                     </div>
 
                     {status.plan !== 'free' && status.plan !== status.effectivePlan && (
-                      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg">
-                        <p className="text-sm text-amber-800">
+                      <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg">
+                        <p className="text-sm text-slate-800">
                           ⚠️ Your <strong>{status.plan}</strong> subscription has expired. You're currently using the app with <strong>Free plan</strong> limits until you renew.
                         </p>
                       </div>
@@ -1157,7 +1157,7 @@ function App() {
                     {status.plan !== 'free' && (
                       <>
                         <div>
-                          <label className="block text-sm font-medium text-amber-700 mb-1">
+                          <label className="block text-sm font-medium text-slate-700 mb-1">
                             Subscription Plan
                           </label>
                           <div className="bg-gray-50 p-3 rounded-lg">
@@ -1166,7 +1166,7 @@ function App() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-amber-700 mb-1">
+                          <label className="block text-sm font-medium text-slate-700 mb-1">
                             Subscription Period
                           </label>
                           <div className="bg-gray-50 p-3 rounded-lg">
@@ -1175,7 +1175,7 @@ function App() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-amber-700 mb-1">
+                          <label className="block text-sm font-medium text-slate-700 mb-1">
                             Renewed Date
                           </label>
                           <div className="bg-gray-50 p-3 rounded-lg">
@@ -1191,7 +1191,7 @@ function App() {
 
                         {status.validUntil && status.isActive && (
                           <div>
-                            <label className="block text-sm font-medium text-amber-700 mb-1">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
                               Valid Until
                             </label>
                             <div className="bg-green-50 p-3 rounded-lg text-green-700">
@@ -1208,7 +1208,7 @@ function App() {
 
                         {status.validUntil && !status.isActive && (
                           <div>
-                            <label className="block text-sm font-medium text-amber-700 mb-1">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
                               Expired On
                             </label>
                             <div className="bg-red-50 p-3 rounded-lg text-red-700">
@@ -1272,7 +1272,7 @@ function App() {
               </button>
               <button
                 onClick={() => setShowProfileModal(false)}
-                className="bg-amber-400 text-yellow-50 px-4 py-2 rounded-lg hover:bg-amber-300 transition-colors"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Close
               </button>
@@ -1286,7 +1286,7 @@ function App() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-amber-900">Share List</h2>
+              <h2 className="text-xl font-bold text-slate-900">Share List</h2>
               <button
                 onClick={() => {
                   setShowShareModal(false);
@@ -1304,8 +1304,8 @@ function App() {
                 onClick={() => setShareModalTab('access-key')}
                 className={`px-4 py-2 font-medium transition-colors ${
                   shareModalTab === 'access-key'
-                    ? 'text-amber-600 border-b-2 border-amber-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 Access Key
@@ -1314,8 +1314,8 @@ function App() {
                 onClick={() => setShareModalTab('invite')}
                 className={`px-4 py-2 font-medium transition-colors ${
                   shareModalTab === 'invite'
-                    ? 'text-amber-600 border-b-2 border-amber-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 Invite by Email
@@ -1331,20 +1331,20 @@ function App() {
                   </p>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-mono font-bold text-amber-900">
+                      <span className="text-2xl font-mono font-bold text-slate-900">
                         {shareModalList.access_key}
                       </span>
                       <button
                         onClick={copyAccessKeyToClipboard}
-                        className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                         title="Copy to clipboard"
                       >
                         <Copy size={20} />
                       </button>
                     </div>
                   </div>
-                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg">
-                    <p className="text-sm text-amber-800">
+                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800">
                       💡 Anyone with this key can view and edit this list.
                     </p>
                   </div>
@@ -1357,13 +1357,13 @@ function App() {
                     Invite someone to join your list by sending them an email invitation.
                   </p>
                   <div>
-                    <label className="block text-sm font-medium text-amber-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       Email Address
                     </label>
                     <input
                       type="email"
                       placeholder="friend@example.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       disabled
                     />
                   </div>
@@ -1384,11 +1384,11 @@ function App() {
       )}
 
       {/* Header */}
-      <header className="bg-amber-400 text-yellow-50 p-4 shadow-lg">
+      <header className="bg-white border-b border-slate-200 p-4 shadow-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">Ungry</h1>
+          <div className="flex items-center gap-3">
+            <img src="/android-chrome-512x512.png" alt="Ungry" className="w-8 h-8" />
+            <h1 className="text-2xl font-bold text-blue-600">Ungry</h1>
           </div>
           <div className="flex items-center gap-4">
             {!currentList && (
@@ -1399,11 +1399,11 @@ function App() {
                   value={newListName}
                   onChange={(e) => setNewListName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && createNewList()}
-                  className="px-3 py-2 rounded-lg text-amber-900"
+                  className="px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   onClick={createNewList}
-                  className="bg-yellow-50 text-amber-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors whitespace-nowrap"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors whitespace-nowrap"
                 >
                   <PlusCircle size={20} />
                   <span className="hidden sm:inline">Create</span>
@@ -1412,7 +1412,7 @@ function App() {
             )}
             <button
               onClick={() => setShowProfileModal(true)}
-              className="bg-yellow-50 text-amber-600 p-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
+              className="bg-slate-100 text-slate-700 p-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 hover:bg-slate-200 transition-colors"
               title="Profile"
             >
               <User size={20} />
@@ -1420,7 +1420,7 @@ function App() {
             </button>
             <button
               onClick={handleLogout}
-              className="bg-yellow-50 text-amber-600 p-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 hover:bg-amber-50 transition-colors"
+              className="bg-slate-100 text-slate-700 p-2 sm:px-4 sm:py-2 rounded-lg flex items-center gap-2 hover:bg-slate-200 transition-colors"
               title="Sign out"
             >
               <LogOut size={20} />
@@ -1444,7 +1444,7 @@ function App() {
             />
             <button
               onClick={createNewList}
-              className="bg-amber-400 text-yellow-50 p-2 rounded-lg flex items-center"
+              className="bg-blue-600 text-white p-2 rounded-lg flex items-center hover:bg-blue-700 transition-colors"
             >
               <PlusCircle size={20} />
             </button>
@@ -1456,7 +1456,7 @@ function App() {
       <main className="max-w-4xl mx-auto p-4">
         {/* Join List Section */}
         {!currentList && (
-          <div className="bg-yellow-50 p-4 rounded-lg shadow-md mb-4">
+          <div className="bg-white p-4 rounded-lg shadow-md mb-4 border border-slate-200">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -1467,7 +1467,7 @@ function App() {
               />
               <button
                 onClick={joinList}
-                className="bg-amber-400 text-yellow-50 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-300 transition-colors"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
               >
                 <Share2 size={20} />
                 Join
@@ -1478,7 +1478,7 @@ function App() {
 
         {/* Current List */}
         {currentList && (
-          <div className="bg-yellow-50 rounded-lg shadow-md p-4">
+          <div className="bg-white rounded-lg shadow-md p-4 border border-slate-200">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <button
@@ -1488,16 +1488,16 @@ function App() {
                     window.history.pushState({}, '', '/');
                     loadLists();
                   }}
-                  className="text-amber-700"
+                  className="text-slate-700 hover:text-slate-900"
                 >
                   <ArrowLeft size={24} />
                 </button>
-                <h2 className="text-xl font-semibold text-amber-900">{currentList.name}</h2>
+                <h2 className="text-xl font-semibold text-slate-900">{currentList.name}</h2>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => openShareModal(currentList)}
-                  className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                   title="Share list"
                 >
                   <Share2 size={18} />
@@ -1505,7 +1505,7 @@ function App() {
                 <div className="relative">
                   <button
                     onClick={() => setShowSortMenu(!showSortMenu)}
-                    className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                     title="Sort items"
                   >
                     {sortBy === 'name' ? <ArrowDownAZ size={18} /> : <ArrowDownUp size={18} />}
@@ -1517,7 +1517,7 @@ function App() {
                           setSortBy('date');
                           setShowSortMenu(false);
                         }}
-                        className="w-full text-left px-4 py-2 hover:bg-amber-50 rounded-t-lg"
+                        className="w-full text-left px-4 py-2 hover:bg-slate-50 rounded-t-lg"
                       >
                         Sort by Date
                       </button>
@@ -1526,7 +1526,7 @@ function App() {
                           setSortBy('name');
                           setShowSortMenu(false);
                         }}
-                        className="w-full text-left px-4 py-2 hover:bg-amber-50 rounded-b-lg"
+                        className="w-full text-left px-4 py-2 hover:bg-slate-50 rounded-b-lg"
                       >
                         Sort by Name
                       </button>
@@ -1550,13 +1550,13 @@ function App() {
 
             {/* Items List */}
             <div>
-              <h3 className="font-medium text-amber-900 mb-2">To Buy</h3>
+              <h3 className="font-medium text-slate-900 mb-2">To Buy</h3>
               <div className="space-y-2 mb-6">
                 {sortItems(listItems.filter(item => !item.bought)).map((item) => (
                   <button
                     key={item.id}
                     onClick={() => toggleItemBought(item)}
-                    className="w-full flex items-center justify-between p-2 hover:bg-amber-50 rounded-lg group text-left transition-colors active:bg-amber-100"
+                    className="w-full flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg group text-left transition-colors active:bg-slate-100"
                   >
                     <span>{item.name}</span>
                     <div className="flex items-center gap-2">
@@ -1575,7 +1575,7 @@ function App() {
               {listItems.some(item => item.bought) && (
                 <>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-amber-900">Bought Items</h3>
+                    <h3 className="font-medium text-slate-900">Bought Items</h3>
                     <button
                       onClick={clearBoughtItems}
                       className="text-red-600 hover:text-red-700 flex items-center gap-1 text-sm"
@@ -1589,7 +1589,7 @@ function App() {
                       <button
                         key={item.id}
                         onClick={() => toggleItemBought(item)}
-                        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-amber-50 transition-colors"
+                        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors"
                       >
                         <span className="line-through">{item.name}</span>
                         <span className="text-sm text-gray-500">
@@ -1611,10 +1611,10 @@ function App() {
               <div
                 key={list.id}
                 onClick={() => navigateToList(list)}
-                className="bg-yellow-50 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border border-slate-200"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-amber-900">{list.name}</h3>
+                  <h3 className="font-semibold text-slate-900">{list.name}</h3>
                   <div className="flex items-center gap-2">
                     {list.owner_id === user.id ? (
                       <button
@@ -1622,7 +1622,7 @@ function App() {
                           e.stopPropagation();
                           deleteList(list.id);
                         }}
-                        className="p-2 hover:bg-amber-100 rounded-lg transition-colors text-red-600 hover:text-red-700"
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-red-600 hover:text-red-700"
                         title="Delete list"
                       >
                         <Trash2 size={18} />
@@ -1633,7 +1633,7 @@ function App() {
                           e.stopPropagation();
                           leaveList(list.id);
                         }}
-                        className="p-2 hover:bg-amber-100 rounded-lg transition-colors text-amber-600 hover:text-amber-700"
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600 hover:text-slate-700"
                         title="Leave list"
                       >
                         <LogIn size={18} className="rotate-180" />
@@ -1644,7 +1644,7 @@ function App() {
                         e.stopPropagation();
                         openShareModal(list);
                       }}
-                      className="p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                       title="Share list"
                     >
                       <Share2 size={18} />
