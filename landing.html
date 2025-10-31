@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ungry is a collaborative shopping list app that syncs in real-time. Share lists with family and friends, never forget items, and shop together effortlessly. Free forever plan available.">
+  <title>Ungry - Never Forget Groceries Again</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Smooth scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* FAQ Accordion */
+    .faq-item input:checked ~ .faq-answer {
+      max-height: 500px;
+      opacity: 1;
+      padding-top: 0.5rem;
+      padding-bottom: 1.5rem;
+    }
+
+    .faq-answer {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: all 0.3s ease-in-out;
+      padding-bottom: 0;
+    }
+
+    .faq-item input:checked ~ label svg {
+      transform: rotate(180deg);
+    }
+
+    .faq-item label svg {
+      transition: transform 0.3s ease;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="/android-chrome-192x192.png" alt="Ungry" class="w-8 h-8">
+        <span class="text-2xl font-bold text-blue-600">Ungry</span>
+      </div>
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#features" class="text-slate-700 hover:text-blue-600 transition-colors font-medium">Features</a>
+        <a href="#how-it-works" class="text-slate-700 hover:text-blue-600 transition-colors font-medium">How It Works</a>
+        <a href="#pricing" class="text-slate-700 hover:text-blue-600 transition-colors font-medium">Pricing</a>
+        <a href="#faq" class="text-slate-700 hover:text-blue-600 transition-colors font-medium">FAQ</a>
+      </nav>
+      <div class="flex items-center gap-3">
+        <a href="/index.html" class="hidden sm:inline-block text-slate-700 hover:text-blue-600 transition-colors font-medium">Sign In</a>
+        <a href="/index.html" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm">
+          Start Free →
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative py-20 px-4 overflow-hidden">
+    <div class="max-w-5xl mx-auto text-center fade-in">
+      <div class="inline-block mb-4 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-200">
+        Join hundreds of households shopping smarter every day
+      </div>
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 mb-6 leading-tight">
+        Never Forget Groceries<br/>
+        <span class="gradient-text">Again. Shop Together,</span><br/>
+        <span class="gradient-text">Effortlessly.</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+        The collaborative shopping list that syncs in real-time. Share with family, roommates, or friends and keep everyone on the same page.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+        <a href="/index.html" class="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-all text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+          Start Your Free List →
+        </a>
+        <a href="#how-it-works" class="bg-white text-slate-700 px-8 py-4 rounded-lg hover:bg-slate-50 transition-colors text-lg font-semibold border-2 border-slate-200">
+          See How It Works
+        </a>
+      </div>
+      <p class="text-sm text-slate-500">
+        No credit card required • Free forever plan available
+      </p>
+    </div>
+  </section>
+
+  <!-- Problem Statement -->
+  <section class="py-16 px-4 bg-white">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-slate-900">
+        Tired of the Grocery Shopping Chaos?
+      </h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <div class="text-4xl mb-3">🤦</div>
+          <p class="text-slate-700 font-medium">Forgot to buy milk... again</p>
+        </div>
+        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <div class="text-4xl mb-3">📝</div>
+          <p class="text-slate-700 font-medium">Lost that crumpled paper list somewhere</p>
+        </div>
+        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <div class="text-4xl mb-3">🔄</div>
+          <p class="text-slate-700 font-medium">Your partner already bought what you're holding</p>
+        </div>
+        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <div class="text-4xl mb-3">📱</div>
+          <p class="text-slate-700 font-medium">Sending endless "did you get...?" texts</p>
+        </div>
+        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <div class="text-4xl mb-3">🏃</div>
+          <p class="text-slate-700 font-medium">Multiple trips to the store each week</p>
+        </div>
+        <div class="bg-blue-600 p-6 rounded-xl flex items-center justify-center">
+          <p class="text-white font-bold text-lg">There's a better way.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution Overview -->
+  <section class="py-16 px-4 bg-gradient-to-b from-blue-50 to-white">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl md:text-5xl font-bold mb-6 text-slate-900">
+        One List. Everyone's On It.<br/>Always In Sync.
+      </h2>
+      <p class="text-xl text-slate-600 leading-relaxed max-w-3xl mx-auto">
+        Ungry keeps your shopping list in perfect sync across all devices. Add items from your couch, your partner checks them off at the store, and everyone knows exactly what's needed—in real-time.
+      </p>
+      <p class="text-xl text-slate-900 font-semibold mt-6">
+        No more confusion. No more duplicates. No more forgotten items.
+      </p>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 px-4 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 text-slate-900">
+        Everything You Need. Nothing You Don't.
+      </h2>
+      <p class="text-center text-slate-600 mb-12 text-lg">Simple, powerful features that just work</p>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
+        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Real-Time Sync</h3>
+          <p class="text-slate-600 leading-relaxed">
+            Add an item at home, see it instantly appear on your partner's phone at the store. Changes sync across all devices in milliseconds.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Collaborative Shopping</h3>
+          <p class="text-slate-600 leading-relaxed">
+            Share lists with family, roommates, or friends. Everyone can add items, check things off, and stay coordinated.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Lightning Fast</h3>
+          <p class="text-slate-600 leading-relaxed">
+            No complicated setup. Create a list, share the access key, and start shopping. It takes 30 seconds.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Secure & Private</h3>
+          <p class="text-slate-600 leading-relaxed">
+            Your lists are yours. End-to-end encryption keeps your shopping habits private and secure.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Works Everywhere</h3>
+          <p class="text-slate-600 leading-relaxed">
+            Use it on your phone, tablet, or computer. The same experience, perfectly optimized for any screen.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="bg-slate-50 p-8 rounded-2xl border border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Smart & Simple</h3>
+          <p class="text-slate-600 leading-relaxed">
+            Mark items as bought with one tap. Sort by date or name. Clear bought items when you're done. That's it.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="py-20 px-4 bg-slate-50">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 text-slate-900">
+        So Simple, You'll Be Shopping Smarter in 60 Seconds
+      </h2>
+      <p class="text-center text-slate-600 mb-16 text-lg">No training videos. No complex features. Just shopping, simplified.</p>
+
+      <div class="grid md:grid-cols-2 gap-12">
+        <!-- Step 1 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl">1</div>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold mb-3 text-slate-900">Create Your List</h3>
+            <p class="text-slate-600 leading-relaxed">
+              Sign up free and create your first shopping list. Name it whatever you want—"Groceries," "Costco Run," "Weekly Essentials."
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl">2</div>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold mb-3 text-slate-900">Share With Anyone</h3>
+            <p class="text-slate-600 leading-relaxed">
+              Get a unique access key and share it with family or friends. They join instantly—no app download required, just open the link.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl">3</div>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold mb-3 text-slate-900">Add Items Together</h3>
+            <p class="text-slate-600 leading-relaxed">
+              Everyone can add items as they think of them. Out of milk? Add it from the kitchen. Need batteries? Add them from the garage.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="flex gap-6">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl">4</div>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold mb-3 text-slate-900">Shop & Check Off</h3>
+            <p class="text-slate-600 leading-relaxed">
+              At the store, check off items as you go. Everyone sees what's been bought in real-time. No more duplicate purchases.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases -->
+  <section class="py-20 px-4 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-slate-900">
+        Perfect For Everyone Who Shops
+      </h2>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border border-blue-100 hover:shadow-lg transition-shadow">
+          <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Families</h3>
+          <p class="text-slate-600">
+            Keep everyone fed without the chaos. Parents add breakfast items, kids add snacks, everyone's in sync.
+          </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border border-blue-100 hover:shadow-lg transition-shadow">
+          <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Roommates</h3>
+          <p class="text-slate-600">
+            Stop the "did you buy toilet paper?" texts. Share one list and split the shopping seamlessly.
+          </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border border-blue-100 hover:shadow-lg transition-shadow">
+          <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Couples</h3>
+          <p class="text-slate-600">
+            Coordinate grocery runs effortlessly. One person adds items throughout the week, the other shops with confidence.
+          </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border border-blue-100 hover:shadow-lg transition-shadow">
+          <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Caregivers</h3>
+          <p class="text-slate-600">
+            Help elderly parents or relatives by managing their shopping list remotely. Add items they need and coordinate delivery.
+          </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl border border-blue-100 hover:shadow-lg transition-shadow">
+          <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-slate-900">Small Teams</h3>
+          <p class="text-slate-600">
+            Office supplies, break room snacks, or team event groceries—keep everyone coordinated without email chains.
+          </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-8 rounded-2xl text-white flex items-center justify-center">
+          <div class="text-center">
+            <div class="text-3xl font-bold mb-2">500+</div>
+            <div class="text-blue-100">Happy users</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Social Proof -->
+  <section class="py-20 px-4 bg-slate-50">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-slate-900">
+        Loved by Happy Shoppers
+      </h2>
+
+      <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <!-- Testimonial 1 -->
+        <div class="bg-white p-8 rounded-2xl shadow-md border border-slate-200">
+          <div class="flex mb-4">
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+          </div>
+          <p class="text-slate-700 mb-4 italic leading-relaxed">
+            "Finally, no more 'did you get the eggs?' calls while I'm at the store. Game changer for our family."
+          </p>
+          <p class="text-slate-900 font-semibold">Sarah M.</p>
+          <p class="text-slate-500 text-sm">Mom of 3</p>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="bg-white p-8 rounded-2xl shadow-md border border-slate-200">
+          <div class="flex mb-4">
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+          </div>
+          <p class="text-slate-700 mb-4 italic leading-relaxed">
+            "My roommates and I used to buy the same things all the time. Ungry saved us money and frustration."
+          </p>
+          <p class="text-slate-900 font-semibold">Mike T.</p>
+          <p class="text-slate-500 text-sm">College Student</p>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="bg-white p-8 rounded-2xl shadow-md border border-slate-200">
+          <div class="flex mb-4">
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+            <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+            </svg>
+          </div>
+          <p class="text-slate-700 mb-4 italic leading-relaxed">
+            "Simple, fast, and it just works. No bloated features, just what you need for shopping."
+          </p>
+          <p class="text-slate-900 font-semibold">Jennifer L.</p>
+          <p class="text-slate-500 text-sm">Busy Professional</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="text-center">
+          <div class="text-4xl font-bold text-blue-600 mb-2">500+</div>
+          <div class="text-slate-600">Active users</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-blue-600 mb-2">2,000+</div>
+          <div class="text-slate-600">Shopping lists</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-blue-600 mb-2">25,000+</div>
+          <div class="text-slate-600">Items checked off</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-blue-600 mb-2">4.8/5</div>
+          <div class="text-slate-600">Average rating</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="py-20 px-4 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 text-slate-900">
+        Simple Pricing. No Surprises.
+      </h2>
+      <p class="text-center text-slate-600 mb-12 text-lg">Choose the plan that works for you</p>
+
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <!-- Free Plan -->
+        <div class="bg-slate-50 rounded-2xl p-8 border-2 border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="text-3xl mb-4">🆓</div>
+          <h3 class="text-2xl font-bold mb-2 text-slate-900">Free</h3>
+          <div class="mb-4">
+            <span class="text-4xl font-bold text-slate-900">$0</span>
+            <span class="text-slate-600">/month</span>
+          </div>
+          <p class="text-slate-600 mb-6">Perfect for getting started</p>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">1 shopping list</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">15 items per week</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Real-time sync</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Share with unlimited users</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Works on all devices</span>
+            </li>
+          </ul>
+          <a href="/index.html" class="block w-full text-center bg-slate-200 text-slate-900 px-6 py-3 rounded-lg hover:bg-slate-300 transition-colors font-semibold">
+            Start Free
+          </a>
+        </div>
+
+        <!-- Standard Plan -->
+        <div class="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-8 border-2 border-blue-600 shadow-xl relative transform md:scale-105">
+          <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+            Most Popular
+          </div>
+          <div class="text-3xl mb-4">⭐</div>
+          <h3 class="text-2xl font-bold mb-2 text-slate-900">Standard</h3>
+          <div class="mb-4">
+            <span class="text-4xl font-bold text-slate-900">$2.99</span>
+            <span class="text-slate-600">/month</span>
+          </div>
+          <p class="text-sm text-slate-600 mb-1">or $29/year (save 20%)</p>
+          <p class="text-slate-700 font-medium mb-6">For active shoppers</p>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700 font-medium">3 shopping lists</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700 font-medium">50 items per week</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Real-time sync</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Share with unlimited users</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Works on all devices</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Priority support</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">No ads</span>
+            </li>
+          </ul>
+          <a href="/index.html" class="block w-full text-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-lg">
+            Upgrade to Standard →
+          </a>
+        </div>
+
+        <!-- Unlimited Plan -->
+        <div class="bg-slate-50 rounded-2xl p-8 border-2 border-slate-200 hover:shadow-lg transition-shadow">
+          <div class="text-3xl mb-4">💎</div>
+          <h3 class="text-2xl font-bold mb-2 text-slate-900">Unlimited</h3>
+          <div class="mb-4">
+            <span class="text-4xl font-bold text-slate-900">$4.99</span>
+            <span class="text-slate-600">/month</span>
+          </div>
+          <p class="text-sm text-slate-600 mb-1">or $49/year (save 20%)</p>
+          <p class="text-slate-700 font-medium mb-6">For families and teams</p>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700 font-medium">Unlimited shopping lists</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700 font-medium">Unlimited items</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Real-time sync</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Share with unlimited users</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Works on all devices</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Priority support</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">No ads</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Premium support</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span class="text-slate-700">Early access to features</span>
+            </li>
+          </ul>
+          <a href="/index.html" class="block w-full text-center bg-slate-800 text-white px-6 py-3 rounded-lg hover:bg-slate-900 transition-colors font-semibold">
+            Upgrade to Unlimited →
+          </a>
+        </div>
+      </div>
+
+      <p class="text-center text-slate-600 mt-8">
+        ✓ Start with Free plan • No credit card required • Upgrade anytime
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-20 px-4 bg-slate-50">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-slate-900">
+        Questions? We've Got Answers.
+      </h2>
+
+      <div class="space-y-4">
+        <!-- FAQ Item 1 -->
+        <div class="faq-item bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <input type="checkbox" id="faq1" class="hidden peer">
+          <label for="faq1" class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50">
+            <span class="font-semibold text-slate-900">Do I need an account?</span>
+            <svg class="w-5 h-5 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </label>
+          <div class="faq-answer px-6 text-slate-600">
+            Yes, but signing up takes 10 seconds. Just your email and a password—no lengthy forms or verification hassles.
+          </div>
+        </div>
+
+        <!-- FAQ Item 2 -->
+        <div class="faq-item bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <input type="checkbox" id="faq2" class="hidden peer">
+          <label for="faq2" class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50">
+            <span class="font-semibold text-slate-900">Can I use Ungry offline?</span>
+            <svg class="w-5 h-5 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </label>
+          <div class="faq-answer px-6 text-slate-600">
+            Currently, Ungry requires an internet connection for real-time sync. Offline mode is on our roadmap!
+          </div>
+        </div>
+
+        <!-- FAQ Item 3 -->
+        <div class="faq-item bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <input type="checkbox" id="faq3" class="hidden peer">
+          <label for="faq3" class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50">
+            <span class="font-semibold text-slate-900">How many people can I share a list with?</span>
+            <svg class="w-5 h-5 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </label>
+          <div class="faq-answer px-6 text-slate-600">
+            Unlimited! Share your list with as many family members, friends, or roommates as you need.
+          </div>
+        </div>
+
+        <!-- FAQ Item 4 -->
+        <div class="faq-item bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <input type="checkbox" id="faq4" class="hidden peer">
+          <label for="faq4" class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50">
+            <span class="font-semibold text-slate-900">Is my data secure?</span>
+            <svg class="w-5 h-5 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </label>
+          <div class="faq-answer px-6 text-slate-600">
+            Absolutely. We use industry-standard encryption and never sell your data. Your shopping lists are private and belong to you.
+          </div>
+        </div>
+
+        <!-- FAQ Item 5 -->
+        <div class="faq-item bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <input type="checkbox" id="faq5" class="hidden peer">
+          <label for="faq5" class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50">
+            <span class="font-semibold text-slate-900">Can I use it on my phone and computer?</span>
+            <svg class="w-5 h-5 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </label>
+          <div class="faq-answer px-6 text-slate-600">
+            Yes! Ungry works on any device with a web browser—phone, tablet, laptop, or desktop. Your lists sync across all of them.
+          </div>
+        </div>
+
+        <!-- FAQ Item 6 -->
+        <div class="faq-item bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <input type="checkbox" id="faq6" class="hidden peer">
+          <label for="faq6" class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50">
+            <span class="font-semibold text-slate-900">What happens if I cancel my subscription?</span>
+            <svg class="w-5 h-5 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </label>
+          <div class="faq-answer px-6 text-slate-600">
+            You'll keep your data and can continue using the Free plan with 1 list and 15 items per week. No data loss, no penalties.
+          </div>
+        </div>
+
+        <!-- FAQ Item 7 -->
+        <div class="faq-item bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <input type="checkbox" id="faq7" class="hidden peer">
+          <label for="faq7" class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50">
+            <span class="font-semibold text-slate-900">Do you offer refunds?</span>
+            <svg class="w-5 h-5 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </label>
+          <div class="faq-answer px-6 text-slate-600">
+            Yes! We offer a 30-day money-back guarantee on all paid plans. If you're not happy, we'll refund you—no questions asked.
+          </div>
+        </div>
+
+        <!-- FAQ Item 8 -->
+        <div class="faq-item bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <input type="checkbox" id="faq8" class="hidden peer">
+          <label for="faq8" class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50">
+            <span class="font-semibold text-slate-900">How do I share a list?</span>
+            <svg class="w-5 h-5 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </label>
+          <div class="faq-answer px-6 text-slate-600">
+            Every list has a unique access key. Just share that key with anyone, and they can join your list instantly—no app download needed.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="py-20 px-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-4xl md:text-5xl font-bold mb-6">
+        Ready to Shop Smarter?
+      </h2>
+      <p class="text-xl md:text-2xl mb-8 text-blue-100 leading-relaxed">
+        Join households who've ditched paper lists and endless texts.<br/>
+        Start your first list in 60 seconds—free forever.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+        <a href="/index.html" class="bg-white text-blue-600 px-8 py-4 rounded-lg hover:bg-blue-50 transition-colors text-lg font-semibold shadow-lg">
+          Start Your Free List →
+        </a>
+        <a href="#pricing" class="bg-blue-800 text-white px-8 py-4 rounded-lg hover:bg-blue-900 transition-colors text-lg font-semibold border-2 border-blue-400">
+          See Pricing
+        </a>
+      </div>
+      <p class="text-blue-100">
+        ✓ No credit card required • ✓ Free forever plan • ✓ Cancel anytime
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-300 py-12 px-4">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid md:grid-cols-3 gap-8 mb-8">
+        <!-- Product -->
+        <div>
+          <h4 class="font-semibold text-white mb-4">Product</h4>
+          <ul class="space-y-2">
+            <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
+            <li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
+            <li><a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
+          </ul>
+        </div>
+
+        <!-- Company & Legal -->
+        <div>
+          <h4 class="font-semibold text-white mb-4">Company & Legal</h4>
+          <ul class="space-y-2">
+            <li><a href="/about.html" class="hover:text-white transition-colors">About Us</a></li>
+            <li><a href="/privacy-policy.html" class="hover:text-white transition-colors">Privacy Policy</a></li>
+            <li><a href="/terms-of-service.html" class="hover:text-white transition-colors">Terms of Service</a></li>
+            <li><a href="/cookie-policy.html" class="hover:text-white transition-colors">Cookie Policy</a></li>
+          </ul>
+        </div>
+
+        <!-- Get Started -->
+        <div>
+          <h4 class="font-semibold text-white mb-4">Get Started</h4>
+          <p class="text-slate-400 mb-4">Start shopping smarter today with Ungry.</p>
+          <a href="/index.html" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+            Sign Up Free →
+          </a>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between">
+        <div class="flex items-center gap-3 mb-4 md:mb-0">
+          <img src="/android-chrome-192x192.png" alt="Ungry" class="w-8 h-8">
+          <span class="text-xl font-bold text-white">Ungry</span>
+        </div>
+        <p class="text-slate-400">© 2025 Ungry. All rights reserved. Made with ❤️ for better shopping.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
+
